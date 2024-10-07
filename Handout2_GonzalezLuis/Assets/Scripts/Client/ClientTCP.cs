@@ -4,8 +4,8 @@ using System.Text;
 using UnityEngine;
 using System.Threading;
 using TMPro;
-using UnityEngine.tvOS;
-using UnityEditor.PackageManager.UI;
+//using UnityEngine.tvOS;
+//using UnityEditor.PackageManager.UI;
 
 public class ClientTCP : MonoBehaviour
 {
@@ -65,6 +65,7 @@ public class ClientTCP : MonoBehaviour
         //Using the socket that stores the connection between the 2 endpoints, call the TCP send function with
         //an encoded message
         byte[] data = new byte[1024];
+        clientText = "Connecting to server...";
         data = Encoding.ASCII.GetBytes(clientText);
         server.Send(data);
 
@@ -77,7 +78,7 @@ public class ClientTCP : MonoBehaviour
         byte[] data = new byte[1024];
         int recv = server.Receive(data);
 
-        clientText = clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
+        clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
     }
 
 }

@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using TMPro;
 using System.Text;
+using UnityEditor;
 
 public class ServerTCP : MonoBehaviour
 {
@@ -46,45 +47,54 @@ public class ServerTCP : MonoBehaviour
 
 
         // no me deja conectarme a otras ips, solo a la mia
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.206.16"), 9050);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 9050);
         socket.Bind(ipep);
 
         socket.Listen(10);
         //TO DO 3
         //TIme to check for connections, start a thread using CheckNewConnections
-        serverText += "\nBind success, looking for new connections";
+        serverText += "\nBind success";
         mainThread = new Thread(CheckNewConnections);
         mainThread.Start();
     }
 
     void CheckNewConnections()
     {
-        while(true)
+        serverText += "\nChecking for new Connections...";
+        while (true)
         {
-            User newUser = new User();
-            newUser.name = "";
-            //TO DO 3
-            //TCP makes it so easy to manage conections, so we are going
-            //to put it to use
-            //Accept any incoming clients and store them in this user.
-            //When accepting, we can now store a copy of our server socket
-            //who has established a communication between a
-            //local endpoint (server) and the remote endpoint(client)
-            //If you want to check their ports and adresses, you can acces
-            //the socket's RemoteEndpoint and LocalEndPoint
-            //try printing them on the console
+            try
+            {
+                User newUser = new User();
+                newUser.name = "";
+                //TO DO 3
+                //TCP makes it so easy to manage conections, so we are going
+                //to put it to use
+                //Accept any incoming clients and store them in this user.
+                //When accepting, we can now store a copy of our server socket
+                //who has established a communication between a
+                //local endpoint (server) and the remote endpoint(client)
+                //If you want to check their ports and adresses, you can acces
+                //the socket's RemoteEndpoint and LocalEndPoint
+                //try printing them on the console
 
-            newUser.socket = socket.Accept();//accept the socket
+                newUser.socket = socket.Accept();//accept the socket
 
+                IPEndPoint clientep = (IPEndPoint)newUser.socket.RemoteEndPoint;
+                serverText = serverText + "\n" + "Connected with " + clientep.Address.ToString() + " at port " + clientep.Port.ToString();
+                Debug.Log(serverText);
+                //TO DO 5
+                //For every client, we call a new thread to receive their messages. 
+                //Here we have to send our user as a parameter so we can use it's socket.
+                Thread newConnection = new Thread(() => Receive(newUser));
+                newConnection.Start();
 
-            IPEndPoint clientep = (IPEndPoint)socket.RemoteEndPoint;
-            serverText = serverText + "\n"+ "Connected with " + clientep.Address.ToString() + " at port " + clientep.Port.ToString();
+            }
+            catch (System.Exception)
+            {
 
-            //TO DO 5
-            //For every client, we call a new thread to receive their messages. 
-            //Here we have to send our user as a parameter so we can use it's socket.
-            Thread newConnection = new Thread(() => Receive(newUser));
-            newConnection.Start();
+                serverText += "\nSomething went wrong trying to connect new client";
+            }
         }
         //This users could be stored in the future on a list
         //in case you want to manage your connections
@@ -93,6 +103,7 @@ public class ServerTCP : MonoBehaviour
 
     void Receive(User user)
     {
+        serverText += "\nReceiving client handshake..."; 
         //TO DO 5
         //Create an infinite loop to start receiving messages for this user
         //You'll have to use the socket function receive to be able to get them.
@@ -102,14 +113,14 @@ public class ServerTCP : MonoBehaviour
         while (true)
         {
             data = new byte[1024];
-
-            socket.Receive(data);
+            recv = user.socket.Receive(data);
+            //socket.Receive(data);
 
             if (recv == 0)
                 break;
             else
             {
-                serverText = serverText + "\n" + Encoding.ASCII.GetString(data, 0, recv);
+                serverText = serverText + "\nClient handshake message: " + Encoding.ASCII.GetString(data, 0, recv);
             }
 
             //TO DO 6
