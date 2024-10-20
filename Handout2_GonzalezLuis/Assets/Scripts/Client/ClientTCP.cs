@@ -14,6 +14,9 @@ public class ClientTCP : MonoBehaviour
     string clientText;
     Socket server;
 
+    public string serverIP = "127.0.0.1";
+    public int serverPort = 9050;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -42,7 +45,7 @@ public class ClientTCP : MonoBehaviour
         //When calling connect and succeeding, our server socket will create a
         //connection between this endpoint and the server's endpoint
 
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.206.16"), 9050);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(serverIP), serverPort);
         server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         server.Connect(ipep);

@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Threading;
 using TMPro;
 using static ServerTCP;
+using UnityEngine.SceneManagement;
 
 public class ServerUDP : MonoBehaviour
 {
@@ -13,6 +14,10 @@ public class ServerUDP : MonoBehaviour
     public GameObject UItextObj;
     TextMeshProUGUI UItext;
     string serverText;
+
+    string serverName = "MantelServer";
+
+    public int serverPort = 9050;
 
     void Start()
     {
@@ -32,7 +37,7 @@ public class ServerUDP : MonoBehaviour
 
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 9050);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, serverPort);
         socket.Bind(ipep);
 
         //TO DO 3
@@ -40,6 +45,16 @@ public class ServerUDP : MonoBehaviour
         //It's time to call the Receive thread
         Thread newConnection = new Thread(Receive);
         newConnection.Start();
+    }
+
+    public void SwitchScene()
+    {
+        SceneManager.LoadScene("Exercise1_Client");
+    }
+
+    public void CloseApp()
+    {
+        Application.Quit();
     }
 
     void Update()
@@ -69,9 +84,9 @@ public class ServerUDP : MonoBehaviour
         
         while (true)
         {
-            socket.ReceiveFrom(data, ref Remote);
+            recv = socket.ReceiveFrom(data, ref Remote);
             serverText = serverText + "\n" + "Message received from {0}:" + Remote.ToString();
-            serverText = serverText + "\n" + Encoding.ASCII.GetString(data, 0, recv);
+            serverText = serverText + "\nMessage: " + Encoding.ASCII.GetString(data, 0, recv);
 
             //TO DO 4
             //When our UDP server receives a message from a random remote, it has to send a ping,
@@ -87,7 +102,7 @@ public class ServerUDP : MonoBehaviour
         //TO DO 4
         //Use socket.SendTo to send a ping using the remote we stored earlier.
         byte[] data = new byte[1024];
-        data = Encoding.ASCII.GetBytes("------- recibido, cliente -------");
+        data = Encoding.ASCII.GetBytes("Server name: " + serverName);
 
         socket.SendTo(data, Remote);
 

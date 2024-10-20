@@ -15,6 +15,8 @@ public class ServerTCP : MonoBehaviour
     TextMeshProUGUI UItext;
     string serverText;
 
+    public int serverPort = 9050;
+
     public struct User
     {
         public string name;
@@ -47,7 +49,7 @@ public class ServerTCP : MonoBehaviour
 
 
         // no me deja conectarme a otras ips, solo a la mia
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 9050);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Any, serverPort);
         socket.Bind(ipep);
 
         socket.Listen(10);
