@@ -5,6 +5,7 @@ using System.Threading;
 using TMPro;
 using System.Text;
 using UnityEditor;
+using System.Collections.Generic;
 
 public class ServerTCP : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class ServerTCP : MonoBehaviour
     string serverText;
 
     public int serverPort = 9050;
+
+    List<User> connectedUsers = new List<User>();
 
     public struct User
     {
@@ -105,7 +108,6 @@ public class ServerTCP : MonoBehaviour
 
     void Receive(User user)
     {
-        serverText += "\nReceiving client handshake..."; 
         //TO DO 5
         //Create an infinite loop to start receiving messages for this user
         //You'll have to use the socket function receive to be able to get them.
@@ -118,17 +120,28 @@ public class ServerTCP : MonoBehaviour
             recv = user.socket.Receive(data);
             //socket.Receive(data);
 
+            bool newUser = true;
+            foreach (User u in connectedUsers)
+            {
+                if (u.socket.RemoteEndPoint == user.socket.RemoteEndPoint)
+                {
+                    newUser = false;
+                }
+            }
+
+            //check if user is new
+
             if (recv == 0)
                 break;
             else
             {
-                serverText = serverText + "\nClient handshake message: " + Encoding.ASCII.GetString(data, 0, recv);
+                serverText = serverText + "\n" + user.name + ": " + Encoding.ASCII.GetString(data, 0, recv);
             }
 
             //TO DO 6
             //We'll send a ping back every time a message is received
             //Start another thread to send a message, same parameters as this one.
-            Thread answer = new Thread(() => Send(user));
+            Thread answer = new Thread(() => Send(user, "\n - You connected to MantelServer - "));
             answer.Start();
         }
     }
@@ -136,10 +149,10 @@ public class ServerTCP : MonoBehaviour
     //TO DO 6
     //Now, we'll use this user socket to send a "ping".
     //Just call the socket's send function and encode the string.
-    void Send(User user)
+    void Send(User user, string text)
     {
         byte[] data = new byte[1024];
-        data = Encoding.ASCII.GetBytes("------- recibido, cliente -------");
+        data = Encoding.ASCII.GetBytes(text);
         user.socket.Send(data);
     }
 }

@@ -110,7 +110,7 @@ public class ClientUDP : MonoBehaviour
         byte[] data = new byte[1024];
         int recv = socket.ReceiveFrom(data, ref Remote);
 
-        clientText = ("Message received from {0}: " + Remote.ToString());
+        clientText += ("Message received from {0}: " + Remote.ToString());
         clientText = clientText + "\nMessage: " + Encoding.ASCII.GetString(data, 0, recv);
 
     }
