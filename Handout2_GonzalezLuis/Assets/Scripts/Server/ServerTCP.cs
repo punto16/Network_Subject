@@ -6,6 +6,7 @@ using TMPro;
 using System.Text;
 using UnityEditor;
 using System.Collections.Generic;
+//using UnityEditor.PackageManager;
 
 public class ServerTCP : MonoBehaviour
 {
@@ -119,30 +120,51 @@ public class ServerTCP : MonoBehaviour
             data = new byte[1024];
             recv = user.socket.Receive(data);
             //socket.Receive(data);
+            string message = Encoding.ASCII.GetString(data, 0, recv);
+            //check if user is new
 
             bool newUser = true;
             foreach (User u in connectedUsers)
             {
-                if (u.socket.RemoteEndPoint == user.socket.RemoteEndPoint)
+                if (u.socket.RemoteEndPoint.ToString() == user.socket.RemoteEndPoint.ToString())
                 {
                     newUser = false;
+                    break;
                 }
             }
 
-            //check if user is new
-
             if (recv == 0)
                 break;
+
+            IPEndPoint clientep = (IPEndPoint)user.socket.RemoteEndPoint;
+            serverText = serverText + "\n" + "Messaged with " + clientep.Address.ToString() + " at port " + clientep.Port.ToString();
+
+
+            if (newUser)
+            {
+                //TO DO 6
+                //We'll send a ping back every time a message is received
+                //Start another thread to send a message, same parameters as this one.
+                user.name = message;
+                serverText += "\n - " + user.name + " connected to MantelServer - ";
+                Thread answer = new Thread(() => Send(user, "\n - You connected to MantelServer - "));
+                answer.Start();
+                foreach (User u in connectedUsers)
+                {
+                    Thread answer2 = new Thread(() => Send(user, "\n - " + user.name + " connected to MantelServer - "));
+                    answer2.Start();
+                }
+                connectedUsers.Add(user);
+            }
             else
             {
-                serverText = serverText + "\n" + user.name + ": " + Encoding.ASCII.GetString(data, 0, recv);
+                serverText = serverText + "\n" + user.name + ": " + message;
+                foreach (User u in connectedUsers)
+                {
+                    Thread answer2 = new Thread(() => Send(u, "\n" + user.name + ": " + message));
+                    answer2.Start();
+                }
             }
-
-            //TO DO 6
-            //We'll send a ping back every time a message is received
-            //Start another thread to send a message, same parameters as this one.
-            Thread answer = new Thread(() => Send(user, "\n - You connected to MantelServer - "));
-            answer.Start();
         }
     }
 

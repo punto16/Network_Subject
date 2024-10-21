@@ -105,15 +105,16 @@ public class ClientUDP : MonoBehaviour
     //since we already know it's the server who's communicating with us
     void Receive()
     {
-        IPEndPoint sender = new IPEndPoint(IPAddress.Parse(serverIP), serverPort);
-        EndPoint Remote = (EndPoint)sender;
-        byte[] data = new byte[1024];
-        int recv = socket.ReceiveFrom(data, ref Remote);
+        while (true)
+        {
+            IPEndPoint sender = new IPEndPoint(IPAddress.Parse(serverIP), serverPort);
+            EndPoint Remote = (EndPoint)sender;
+            byte[] data = new byte[1024];
+            int recv = socket.ReceiveFrom(data, ref Remote);
 
-        clientText += ("Message received from {0}: " + Remote.ToString());
-        clientText = clientText + "\nMessage: " + Encoding.ASCII.GetString(data, 0, recv);
-
+            clientText += ("Message received from {0}: " + Remote.ToString());
+            clientText = clientText + "\nMessage: " + Encoding.ASCII.GetString(data, 0, recv);
+        }
     }
-
 }
 

@@ -17,6 +17,8 @@ public class ClientTCP : MonoBehaviour
     public string serverIP = "127.0.0.1";
     public int serverPort = 9050;
 
+    public string userName = "User";
+
     // Start is called before the first frame update
     void Start()
     {
@@ -29,6 +31,22 @@ public class ClientTCP : MonoBehaviour
     {
         UItext.text = clientText;
 
+    }
+
+    public void UpdateIPStringTCP(string ip)
+    {
+        this.serverIP = ip;
+    }
+
+    public void UpdateUserStringTCP(string user)
+    {
+        this.userName = user;
+    }
+
+    public void SendChatStringTCP(string text)
+    {
+        Thread mainThread = new Thread(() => Send(text));
+        mainThread.Start();
     }
 
     public void StartClient()
@@ -53,7 +71,7 @@ public class ClientTCP : MonoBehaviour
         //TO DO 4
         //With an established connection, we want to send a message so the server aacknowledges us
         //Start the Send Thread
-        Thread sendThread = new Thread(Send);
+        Thread sendThread = new Thread(() => Send(userName));
         sendThread.Start();
 
         //TO DO 7
@@ -62,14 +80,13 @@ public class ClientTCP : MonoBehaviour
         receiveThread.Start();
 
     }
-    void Send()
+    void Send(string text)
     {
         //TO DO 4
         //Using the socket that stores the connection between the 2 endpoints, call the TCP send function with
         //an encoded message
         byte[] data = new byte[1024];
-        clientText = "Connecting to server...";
-        data = Encoding.ASCII.GetBytes(clientText);
+        data = Encoding.ASCII.GetBytes(text);
         server.Send(data);
 
     }
@@ -78,10 +95,12 @@ public class ClientTCP : MonoBehaviour
     //Similar to what we already did with the server, we have to call the Receive() method from the socket.
     void Receive()
     {
-        byte[] data = new byte[1024];
-        int recv = server.Receive(data);
+        while (true)
+        {
+            byte[] data = new byte[1024];
+            int recv = server.Receive(data);
 
-        clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
+            clientText += "\n" + Encoding.ASCII.GetString(data, 0, recv);
+        }
     }
-
 }

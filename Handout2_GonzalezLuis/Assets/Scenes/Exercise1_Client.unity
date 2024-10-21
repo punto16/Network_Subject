@@ -2619,6 +2619,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 505648342}
+        m_TargetAssemblyTypeName: ClientTCP, Assembly-CSharp
+        m_MethodName: SendChatStringTCP
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnSubmit:
     m_PersistentCalls:
       m_Calls: []
@@ -4600,6 +4612,7 @@ MonoBehaviour:
   UItextObj: {fileID: 2144365163}
   serverIP: 127.0.0.1
   serverPort: 9050
+  userName: User
 --- !u!4 &510046297 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8017003943755828472, guid: 0de317ec1d64d51488f3152e663fa480, type: 3}
@@ -16365,6 +16378,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 505648342}
+        m_TargetAssemblyTypeName: ClientTCP, Assembly-CSharp
+        m_MethodName: UpdateUserStringTCP
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnSubmit:
     m_PersistentCalls:
       m_Calls: []
@@ -18493,6 +18518,18 @@ MonoBehaviour:
       - m_Target: {fileID: 1308192846}
         m_TargetAssemblyTypeName: ClientUDP, Assembly-CSharp
         m_MethodName: UpdateIPStringUDP
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 505648342}
+        m_TargetAssemblyTypeName: ClientTCP, Assembly-CSharp
+        m_MethodName: UpdateIPStringTCP
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
