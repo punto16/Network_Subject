@@ -7,7 +7,7 @@ public class RotateLoadingUi : MonoBehaviour
 {
     Transform goT;
 
-    [Range(-1.0f, 1.0f)]
+    [Range(-10.0f, 10.0f)]
     public float degreePerFrame = 1.0f;
 
     // Start is called before the first frame update
