@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
 
@@ -83,16 +85,20 @@ namespace Packet
         private BinaryReader reader;
         private BinaryWriter writer;
 
+        private Int16 goNumber = 0;
+
         public Packet()
         {
-            ms = new MemoryStream();
-            writer = new BinaryWriter(ms);
+            this.ms = new MemoryStream();
+            this.writer = new BinaryWriter(ms);
+            this.goNumber = 0;
         }
 
         public Packet(byte[] data)
         {
-            ms = new MemoryStream(data);
-            reader = new BinaryReader(ms);
+            this.ms = new MemoryStream(data);
+            this.reader = new BinaryReader(ms);
+            this.goNumber = 0;
         }
 
         public void Start()
@@ -100,14 +106,46 @@ namespace Packet
             ms.Seek(0, SeekOrigin.Begin);
         }
 
+        public void Init()
+        {
+            this.ms = new MemoryStream();
+            this.writer = new BinaryWriter(ms);
+            this.goNumber = 0;
+        }
+
+        public void Init(byte[] data)
+        {
+            this.ms = new MemoryStream(data);
+            this.reader = new BinaryReader(ms);
+            this.goNumber = 0;
+        }
+
         public void Close()
         {
             ms?.Close();
             reader?.Close();
             writer?.Close();
+            goNumber = 0;
+        }
+
+        public void Restart()
+        {
+            Close();
+            Init();
+        }
+
+        public void Restart(byte[] data)
+        {
+            Close();
+            Init(data);
         }
 
         //deserializing
+        public int DeserializeGetGameObjectsAmount()
+        {
+            return (int)reader.ReadInt16();
+        }
+        
         public PacketType DeserializeGetType()
         {
             return (PacketType)reader.ReadInt16();
@@ -144,6 +182,11 @@ namespace Packet
         //serializing
         public void Serialize(PacketType type, RegularDataPacket data)
         {
+            if (ms.Position == 0)
+            {
+                // Reserve 2 bytes for the goNumber (Int16)
+                writer.Write((Int16)goNumber);
+            }
             writer.Write((Int16)type);
             writer.Write(data.id);
             writer.Write(data.name);
@@ -152,20 +195,43 @@ namespace Packet
             writer.Write(data.orientation);
             writer.Write(data.impostor);
             writer.Write(data.alive);
+
+            this.goNumber++;
         }
 
         public void Serialize(PacketType type, DeleteDataPacket data)
         {
+            if (ms.Position == 0)
+            {
+                // Reserve 2 bytes for the goNumber (Int16)
+                writer.Write((Int16)goNumber);
+            }
             writer.Write((Int16)type);
             writer.Write(data.id);
+
+            this.goNumber++;
         }
 
         public void Serialize(PacketType type, TextDataPacket data)
         {
+            if (ms.Position == 0)
+            {
+                // Reserve 2 bytes for the goNumber (Int16)
+                writer.Write((Int16)goNumber);
+            }
             writer.Write((Int16)type);
             writer.Write(data.id);
             writer.Write(data.name);
             writer.Write(data.text);
+
+            this.goNumber++;
+        }
+
+        public void Send(ref Socket socket, IPEndPoint ipep)
+        {
+            Start();
+            writer.Write((Int16)this.goNumber);
+            socket.SendTo(this.ms.GetBuffer(), ipep);
         }
 
         //getters
@@ -174,5 +240,7 @@ namespace Packet
         public BinaryReader GetBinaryReader() { return this.reader; }
 
         public BinaryWriter GetBinaryWriter() { return this.writer; }
+
+        public int GetGameObjectsAmount() { return (int)this.goNumber; }
     }
 }
