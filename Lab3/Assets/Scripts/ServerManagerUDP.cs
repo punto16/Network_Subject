@@ -29,7 +29,7 @@ public class ServerManagerUDP : MonoBehaviour
     private IPEndPoint ipep;
     private bool socketCreated = false;
     private float timer = 0.0f;
-    private readonly float updateToServerInSeconds = 1.0f;
+    private readonly float updateToServerInSeconds = 0.05f;
     private readonly Dictionary<string, UserData> connectedClients = new Dictionary<string, UserData>();
 
     public int serverPort = 9050;
@@ -69,8 +69,6 @@ public class ServerManagerUDP : MonoBehaviour
         try
         {
             p.Send(ref socket, (IPEndPoint)remote);
-
-            p.Close();
         }
         catch (Exception e)
         {
@@ -104,7 +102,7 @@ public class ServerManagerUDP : MonoBehaviour
                     HandlePacket(pReader, pWriter, remote);
                 }
 
-                Broadcast(pWriter);
+                Broadcast(pWriter, remote);
 
                 pReader.Close();
             }
@@ -149,7 +147,7 @@ public class ServerManagerUDP : MonoBehaviour
         {
             created = true;
             connectedClients[key] = new UserData(remote, dsData);
-            Debug.Log($"New player added: {dsData.name}");
+            Debug.Log($"New player added: {dsData.name} '{dsData.id}'");
         }
         else
         {
@@ -179,12 +177,15 @@ public class ServerManagerUDP : MonoBehaviour
         pWriter.Serialize(Packet.Packet.PacketType.TEXT, dsData);
     }
 
-    void Broadcast(Packet.Packet pWriter)
+    void Broadcast(Packet.Packet pWriter, EndPoint remote)
     {
         foreach (var client in connectedClients.Values)
         {
-            Send(client.ep, pWriter);
-            //Task.Run(() => Send(client.ep, pWriter));
+            if (!client.ep.Equals(remote))
+            {
+                Send(client.ep, pWriter);
+            }
         }
+        pWriter.Close();
     }
 }

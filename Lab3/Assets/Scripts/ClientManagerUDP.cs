@@ -32,7 +32,7 @@ public class ClientManagerUDP : MonoBehaviour
 
     bool socketCreated = false;
 
-    public float updateToServerInSeconds = 1.0f;
+    public float updateToServerInSeconds = 0.05f;
     private float timer = 0.0f;
 
     private volatile bool _keepListening = true;
@@ -103,6 +103,10 @@ public class ClientManagerUDP : MonoBehaviour
                     ps.impostor,
                     ps.alive
                     );
+
+
+                //temporal break so it only sends player
+                break;
             }
             Send();
             //Thread send = new Thread(Send);
@@ -346,6 +350,18 @@ public class ClientManagerUDP : MonoBehaviour
     public void ChangeServerIP(string ip)
     {
         this.serverIP = ip;
+    }
+
+    public void DeletePlayer()
+    {
+        foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
+        {
+            GameObject obj = entry.Key;
+            int id = entry.Value;
+            pWriter.Serialize(Packet.Packet.PacketType.DELETE, new Packet.DeleteDataPacket(id));
+            Send();
+            break;
+        }
     }
 
     //will generate a random id of 10 digits for the size of an integer

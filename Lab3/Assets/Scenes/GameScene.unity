@@ -261,6 +261,18 @@ MonoBehaviour:
           m_StringArgument: Lobby
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 1910955654}
+        m_TargetAssemblyTypeName: ClientManagerUDP, Assembly-CSharp
+        m_MethodName: DeletePlayer
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
 --- !u!114 &85526800
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1572,6 +1584,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 49882260}
     m_Modifications:
+    - target: {fileID: 3163343884697403796, guid: c3d7eda71af5d37419ee1ef1e57553d9, type: 3}
+      propertyPath: m_LinearDrag
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 4453845856744993145, guid: c3d7eda71af5d37419ee1ef1e57553d9, type: 3}
       propertyPath: m_Name
       value: Player
