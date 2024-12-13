@@ -116,8 +116,6 @@ public class ClientManagerUDP : MonoBehaviour
 
             timer = 0.0f;
         }
-
-        Debug.Log($"Timer is {timer} out of fixed {updateToServerInSeconds}");
     }
 
     public void StartClient()

@@ -10,8 +10,12 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody2D playerPhy;
     PlayerScript playerScript;
     float playerSpeed;
+    public GameObject task1;
+    public GameObject exitButton;
 
     public bool autoRight = false;
+
+    public bool freezeMovement = false;
 
     // Start is called before the first frame update
     void Start()
@@ -26,6 +30,10 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+
+        if (this.freezeMovement) return;
+
         Vector2 v = new Vector2(0, 0);
 
         if (Input.GetKey(KeyCode.W))
@@ -43,6 +51,13 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.D))
         {
             v.x += playerSpeed;
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            freezeMovement = true;
+            task1?.SetActive(true);
+            exitButton?.SetActive(false);
         }
 
 
