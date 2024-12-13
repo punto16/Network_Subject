@@ -12,15 +12,17 @@ namespace Packet
         public int id;
         public string name;
         public Vector2 pos;
+        public Vector2 vel;
         public bool orientation;
         public bool impostor;
         public bool alive;
 
-        public RegularDataPacket(int id, string name, Vector2 pos, bool orientation, bool impostor, bool alive)
+        public RegularDataPacket(int id, string name, Vector2 pos, Vector2 vel, bool orientation, bool impostor, bool alive)
         {
             this.id = id;
             this.name = name;
             this.pos = pos;
+            this.vel = vel;
             this.orientation = orientation;
             this.impostor = impostor;
             this.alive = alive;
@@ -156,11 +158,12 @@ namespace Packet
             int id = reader.ReadInt32();
             string name = reader.ReadString();
             Vector2 pos = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+            Vector2 vel = new Vector2(reader.ReadSingle(), reader.ReadSingle());
             bool orientation = reader.ReadBoolean();
             bool impostor = reader.ReadBoolean();
             bool alive = reader.ReadBoolean();
 
-            return new RegularDataPacket(id, name, pos, orientation, impostor, alive);
+            return new RegularDataPacket(id, name, pos, vel, orientation, impostor, alive);
         }
 
         public DeleteDataPacket DeserializeDeleteDataPacket()
@@ -192,6 +195,8 @@ namespace Packet
             writer.Write(data.name);
             writer.Write(data.pos.X);
             writer.Write(data.pos.Y);
+            writer.Write(data.vel.X);
+            writer.Write(data.vel.Y);
             writer.Write(data.orientation);
             writer.Write(data.impostor);
             writer.Write(data.alive);

@@ -1192,6 +1192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0186e1fe0254174d846d7e406815a20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  autoRight: 0
 --- !u!1 &1879689184
 GameObject:
   m_ObjectHideFlags: 0
@@ -1358,7 +1359,7 @@ MonoBehaviour:
   mapParent: {fileID: 523422154}
   MainPlayer: {fileID: 1818215721}
   loadingObj: {fileID: 1538173103}
-  updateToServerInSeconds: 1
+  updateToServerInSeconds: 0.05
 --- !u!4 &1910955655
 Transform:
   m_ObjectHideFlags: 0

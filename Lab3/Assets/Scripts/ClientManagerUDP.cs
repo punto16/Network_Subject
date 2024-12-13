@@ -92,13 +92,15 @@ public class ClientManagerUDP : MonoBehaviour
                 GameObject obj = entry.Key;
                 int id = entry.Value;
                 Vector2 pos = new Vector2(obj.GetComponent<Transform>().position.x, obj.GetComponent<Transform>().position.y);
-
+                Vector2 vel = new Vector2(obj.GetComponent<Rigidbody2D>().velocity.x, obj.GetComponent<Rigidbody2D>().velocity.y);
+                
                 PlayerScript ps = obj.GetComponent<PlayerScript>();
                 Serialize(
                     Packet.Packet.PacketType.UPDATE,
                     id,
                     ps.userName,
                     pos,
+                    vel,
                     ps.orientation,
                     ps.impostor,
                     ps.alive
@@ -114,6 +116,8 @@ public class ClientManagerUDP : MonoBehaviour
 
             timer = 0.0f;
         }
+
+        Debug.Log($"Timer is {timer} out of fixed {updateToServerInSeconds}");
     }
 
     public void StartClient()
@@ -145,12 +149,14 @@ public class ClientManagerUDP : MonoBehaviour
 
         PlayerScript ps = obj.GetComponent<PlayerScript>();
         Vector2 pos = new Vector2(obj.GetComponent<Transform>().position.x, obj.GetComponent<Transform>().position.y);
+        Vector2 vel = new Vector2(obj.GetComponent<Rigidbody2D>().velocity.x, obj.GetComponent<Rigidbody2D>().velocity.y);
 
         Serialize(
             Packet.Packet.PacketType.CREATE,
             id,
             ps.userName,
             pos,
+            vel,
             ps.orientation,
             ps.impostor,
             ps.alive
@@ -165,9 +171,9 @@ public class ClientManagerUDP : MonoBehaviour
         receive.Start();
     }
 
-    void Serialize(Packet.Packet.PacketType typeP, int id, string name, Vector2 pos, bool orientation, bool impostor, bool alive)
+    void Serialize(Packet.Packet.PacketType typeP, int id, string name, Vector2 pos, Vector2 vel, bool orientation, bool impostor, bool alive)
     {
-        Packet.RegularDataPacket dataP = new Packet.RegularDataPacket(id, name, new System.Numerics.Vector2(pos.x, pos.y), orientation, impostor, alive);
+        Packet.RegularDataPacket dataP = new Packet.RegularDataPacket(id, name, new System.Numerics.Vector2(pos.x, pos.y), new System.Numerics.Vector2(vel.x, vel.y), orientation, impostor, alive);
         pWriter.Serialize(typeP, dataP);
     }
 
@@ -254,7 +260,7 @@ public class ClientManagerUDP : MonoBehaviour
                 }
                 else
                 {
-                    Thread.Sleep(10);
+                    Thread.Sleep(1);
                 }
             }
             catch (SocketException ex) when (ex.SocketErrorCode == SocketError.WouldBlock)
@@ -303,6 +309,7 @@ public class ClientManagerUDP : MonoBehaviour
             {
                 PlayerScript playerScript = obj?.GetComponent<PlayerScript>();
                 obj.transform.position = new Vector3(dsData.pos.X, dsData.pos.Y, 0);
+                obj.GetComponent<Rigidbody2D>().velocity = new Vector3(dsData.vel.X, dsData.vel.Y, 0);
                 playerScript.ChangeName(dsData.name);
                 playerScript.orientation = dsData.orientation;
                 playerScript.impostor = dsData.impostor;

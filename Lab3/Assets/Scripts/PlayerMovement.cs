@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 //this script is only to convert input of user into movement of the player
@@ -9,6 +10,9 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody2D playerPhy;
     PlayerScript playerScript;
     float playerSpeed;
+
+    public bool autoRight = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -37,6 +41,18 @@ public class PlayerMovement : MonoBehaviour
             v.x -= playerSpeed;
         }
         if (Input.GetKey(KeyCode.D))
+        {
+            v.x += playerSpeed;
+        }
+
+
+        //testing
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            autoRight = !autoRight;
+        }
+
+        if (autoRight)
         {
             v.x += playerSpeed;
         }
