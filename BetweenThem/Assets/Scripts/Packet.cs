@@ -87,6 +87,28 @@ namespace Packet
         }
     }
 
+    public class VoteActionDataPacket
+    {
+        public int idVoter;
+        public int idVoted;
+
+        public VoteActionDataPacket(int idVoter, int idVoted)
+        {
+            this.idVoter = idVoter;
+            this.idVoted = idVoted;
+        }
+    }
+
+    public class StartGameActionDataPacket
+    {
+        public int idImpostor;
+
+        public StartGameActionDataPacket(int idImpostor)
+        {
+            this.idImpostor = idImpostor;
+        }
+    }
+
     public class Packet
     {
         public enum PacketType : Int16
@@ -131,6 +153,13 @@ namespace Packet
             TRIGGERREPORT,
             //int16 packet type
             //int id
+            VOTE,
+            //int16 packet type
+            //int id voter
+            //int id voted
+            STARTGAME,
+            //int16 packet type
+            //int id impostor
         }
 
         private MemoryStream ms;
@@ -261,6 +290,21 @@ namespace Packet
             return new TriggerReportActionDataPacket(id);
         }
 
+        public VoteActionDataPacket DeserializeVoteActionDataPacket()
+        {
+            int idVoter = reader.ReadInt32();
+            int idVoted = reader.ReadInt32();
+
+            return new VoteActionDataPacket(idVoter, idVoted);
+        }
+
+        public StartGameActionDataPacket DeserializeStartGameActionDataPacket()
+        {
+            int idImpostor = reader.ReadInt32();
+
+            return new StartGameActionDataPacket(idImpostor);
+        }
+
         //serializing
         public void Serialize(PacketType type, RegularDataPacket data)
         {
@@ -352,6 +396,35 @@ namespace Packet
             writer.Write((Int16)type);
             writer.Write((Int16)ActionType.TRIGGERREPORT);
             writer.Write(data.id);
+
+            this.goNumber++;
+        }
+
+        public void Serialize(PacketType type, VoteActionDataPacket data)
+        {
+            if (ms.Position == 0)
+            {
+                // Reserve 2 bytes for the goNumber (Int16)
+                writer.Write((Int16)goNumber);
+            }
+            writer.Write((Int16)type);
+            writer.Write((Int16)ActionType.VOTE);
+            writer.Write(data.idVoter);
+            writer.Write(data.idVoted);
+
+            this.goNumber++;
+        }
+
+        public void Serialize(PacketType type, StartGameActionDataPacket data)
+        {
+            if (ms.Position == 0)
+            {
+                // Reserve 2 bytes for the goNumber (Int16)
+                writer.Write((Int16)goNumber);
+            }
+            writer.Write((Int16)type);
+            writer.Write((Int16)ActionType.STARTGAME);
+            writer.Write(data.idImpostor);
 
             this.goNumber++;
         }

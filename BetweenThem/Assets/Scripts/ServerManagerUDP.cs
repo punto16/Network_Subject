@@ -2,14 +2,8 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 using System.Threading;
-using System.IO;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine.Networking;
 
 public class UserData
 {
@@ -29,8 +23,10 @@ public class ServerManagerUDP : MonoBehaviour
     private IPEndPoint ipep;
     private bool socketCreated = false;
     private float timer = 0.0f;
-    private readonly float updateToServerInSeconds = 0.05f;
+    private readonly float startGameTime = 5.0f;
     private readonly Dictionary<string, UserData> connectedClients = new Dictionary<string, UserData>();
+
+    bool preGame = true;
 
     public int serverPort = 9050;
 
@@ -55,12 +51,19 @@ public class ServerManagerUDP : MonoBehaviour
 
     void Update()
     {
-        timer += Time.deltaTime;
-
-
-        if (timer >= updateToServerInSeconds)
+        //min of 4 players to play the game
+        if (preGame)
         {
-            timer = 0.0f;
+            if (connectedClients.Count >= 4)
+            {
+                timer += Time.deltaTime;
+            }
+            if (timer >= startGameTime)
+            {
+                StartGame();
+                timer = 0.0f;
+                preGame = false;
+            }
         }
     }
 
@@ -74,6 +77,22 @@ public class ServerManagerUDP : MonoBehaviour
         {
             Debug.LogError($"Error sending packet to {remote}: {e.Message}");
         }
+    }
+
+    void StartGame()
+    {
+        Packet.Packet pWriter = new Packet.Packet();
+        pWriter.Start();
+
+        Packet.StartGameActionDataPacket dsData = new Packet.StartGameActionDataPacket(GetRandomClientId());
+        Debug.Log($"User with ID {dsData.idImpostor} is now the Impostor");
+        pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+
+        foreach (var client in connectedClients.Values)
+        {
+            Send(client.ep, pWriter);
+        }
+        pWriter.Close();
     }
 
     void Receive()
@@ -96,7 +115,6 @@ public class ServerManagerUDP : MonoBehaviour
 
                 //ticher, si lees esto, pon "azúcar" en los comentarios de la entrega
 
-                //todo: right now it detects goNumbers as 0...
                 for (int i = 0; i < goNumber; i++)
                 {
                     HandlePacket(pReader, pWriter, remote);
@@ -129,6 +147,10 @@ public class ServerManagerUDP : MonoBehaviour
 
             case Packet.Packet.PacketType.TEXT:
                 HandleText(pReader, pWriter, remote);
+                break;
+
+            case Packet.Packet.PacketType.ACTION:
+                HandleAction(pReader, pWriter, remote);
                 break;
 
             default:
@@ -177,15 +199,76 @@ public class ServerManagerUDP : MonoBehaviour
         pWriter.Serialize(Packet.Packet.PacketType.TEXT, dsData);
     }
 
-    void Broadcast(Packet.Packet pWriter, EndPoint remote)
+    void HandleAction(Packet.Packet pReader, Packet.Packet pWriter, EndPoint remote)
+    {
+        Packet.Packet.ActionType aType = pReader.DeserializeGetActionType();
+
+        switch (aType)
+        {
+            case Packet.Packet.ActionType.KILL:
+                {
+                    Packet.KillActionDataPacket dsData = pReader.DeserializeKillActionDataPacket();
+
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+                    break;
+                }
+            case Packet.Packet.ActionType.COMPLETETASK:
+                {
+                    Packet.CompleteTaskActionDataPacket dsData = pReader.DeserializeTaskActionDataPacket();
+
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+                    break;
+                }
+            case Packet.Packet.ActionType.TRIGGERREPORT:
+                {
+                    Packet.TriggerReportActionDataPacket dsData = pReader.DeserializeReportActionDataPacket();
+
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+                    break;
+                }
+            case Packet.Packet.ActionType.VOTE:
+                {
+                    Packet.VoteActionDataPacket dsData = pReader.DeserializeVoteActionDataPacket();
+
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+                    break;
+                }
+            case Packet.Packet.ActionType.STARTGAME:
+                {
+                    Packet.StartGameActionDataPacket dsData = pReader.DeserializeStartGameActionDataPacket();
+
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+                    break;
+                }
+            default:
+                break;
+        }
+    }
+
+    void Broadcast(Packet.Packet pWriter, EndPoint remote, bool toEveryone = false)
     {
         foreach (var client in connectedClients.Values)
         {
-            if (!client.ep.Equals(remote))
+            if (toEveryone || !client.ep.Equals(remote))
             {
                 Send(client.ep, pWriter);
             }
         }
         pWriter.Close();
+    }
+
+    public int GetRandomClientId()
+    {
+        if (connectedClients.Count == 0)
+        {
+            Debug.LogWarning("No clients connected.");
+            return 0;
+        }
+
+        System.Random random = new System.Random();
+        List<UserData> clients = new List<UserData>(connectedClients.Values);
+        int randomIndex = random.Next(0, clients.Count);
+
+        return clients[randomIndex].data.id;
     }
 }

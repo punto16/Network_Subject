@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Threading;
 using System.IO;
 using System.Collections.Generic;
+using TMPro;
 using System.Linq;
 using System;
 
@@ -32,6 +33,11 @@ public class ClientManagerUDP : MonoBehaviour
 
     bool socketCreated = false;
 
+    public TMP_Text tasksAmount;
+    public TMP_Text ourPlayerName;
+    public GameManager gm;
+    public GameObject cameraTarget;
+
     public float updateToServerInSeconds = 0.05f;
     private float timer = 0.0f;
 
@@ -59,6 +65,8 @@ public class ClientManagerUDP : MonoBehaviour
 
         pReader = new Packet.Packet();
         pWriter = new Packet.Packet();
+
+        UpdateTasksText();
 
         StartClient();
     }
@@ -241,7 +249,10 @@ public class ClientManagerUDP : MonoBehaviour
         {
             GameObject obj = entry.Key;
             if (entry.Key == go)
+            {
                 Serialize(Packet.Packet.PacketType.ACTION, Packet.Packet.ActionType.COMPLETETASK, entry.Value, playerTasksAmount);
+                break;
+            }
         }
     }
     
@@ -355,6 +366,26 @@ public class ClientManagerUDP : MonoBehaviour
                                                 });
                                                 break;
                                             }
+                                        case Packet.Packet.ActionType.VOTE:
+                                            {
+                                                Packet.VoteActionDataPacket dsData = pReader.DeserializeVoteActionDataPacket();
+
+                                                EnqueueMainThreadAction(() =>
+                                                {
+                                                    HandleActionVote(dsData);
+                                                });
+                                                break;
+                                            }
+                                        case Packet.Packet.ActionType.STARTGAME:
+                                            {
+                                                Packet.StartGameActionDataPacket dsData = pReader.DeserializeStartGameActionDataPacket();
+
+                                                EnqueueMainThreadAction(() =>
+                                                {
+                                                    HandleActionStartGame(dsData);
+                                                });
+                                                break;
+                                            }
                                         default:
                                             break;
                                     }
@@ -441,6 +472,9 @@ public class ClientManagerUDP : MonoBehaviour
             playerScript.impostor = dsData.impostor;
             playerScript.alive = dsData.alive;
 
+            gm.totalTasksAmount += gm.task1AmountPerPlayer;
+            UpdateTasksText();
+
             entitiesGO.Add(obj, dsData.id);
         }
     }
@@ -471,12 +505,52 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandleActionCompleteTask(Packet.CompleteTaskActionDataPacket dsData)
     {
-        //todo   
+        gm.totalTasksCounter++;
+        UpdateTasksText();
     }
 
     void HandleActionReport(Packet.TriggerReportActionDataPacket dsData)
     {
         //todo
+    }
+
+    void HandleActionVote(Packet.VoteActionDataPacket dsData)
+    {
+        //todo
+    }
+
+    void HandleActionStartGame(Packet.StartGameActionDataPacket dsData)
+    {
+        bool playerImpostor = true;
+        bool ourPlayer = true;
+        foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
+        {
+            if (ourPlayer)
+            {
+                entry.Key.transform.position = new Vector3(0, 0, entry.Key.transform.position.z);
+                ourPlayer = false;
+            }
+            if (entry.Value == dsData.idImpostor)
+            {
+                if (playerImpostor)
+                {
+                    ourPlayerName.color = new Color(1.0f, 0.0f, 0.0f);
+                }
+                entry.Key.GetComponent<PlayerScript>().impostor = true;
+                gm.totalTasksAmount -= gm.task1AmountPerPlayer;
+                UpdateTasksText();
+            }
+            playerImpostor = false;
+        }
+        cameraTarget.transform.position = new Vector3(0, 0, cameraTarget.transform.position.z);
+        gm.ChangeGameState(GameManager.GameState.PLAYING);
+    }
+
+    public void UpdateTasksText()
+    {
+        if (this.tasksAmount == null) return;
+
+        this.tasksAmount.SetText($"Completed Tasks: {gm.totalTasksCounter} / {gm.totalTasksAmount}");
     }
 
     public void ChangeName(string name)

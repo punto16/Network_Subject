@@ -75,9 +75,12 @@ public class Task1 : MonoBehaviour
                 if (closestObject != null)
                 {
                     closestObject.GetComponent<Task1Info>().EnableTask(false);
+                    playerScript.inRangeTasks.Remove(closestObject);
                 }
             }
             playerScript.completedTasks++;
+            gameManager.totalTasksCounter++;
+            clientManager.UpdateTasksText();
             clientManager.CompleteTask(gameObject, playerScript.completedTasks);
         }
         else
