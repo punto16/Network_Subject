@@ -954,6 +954,7 @@ GameObject:
   m_Component:
   - component: {fileID: 161541562}
   - component: {fileID: 161541563}
+  - component: {fileID: 161541564}
   m_Layer: 0
   m_Name: WarningSign
   m_TagString: TaskMachine
@@ -1028,6 +1029,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &161541564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 161541561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b66605495fe954aa086c6ef036a8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceAmplitude: 0.2
+  bounceSpeed: 3
 --- !u!1 &211845326
 GameObject:
   m_ObjectHideFlags: 0
@@ -3016,6 +3031,7 @@ GameObject:
   m_Component:
   - component: {fileID: 933795126}
   - component: {fileID: 933795127}
+  - component: {fileID: 933795128}
   m_Layer: 0
   m_Name: 'WarningSign '
   m_TagString: TaskMachine
@@ -3090,6 +3106,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &933795128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 933795125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b66605495fe954aa086c6ef036a8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceAmplitude: 0.2
+  bounceSpeed: 3
 --- !u!1 &948998044
 GameObject:
   m_ObjectHideFlags: 0
@@ -4015,6 +4045,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1136292712}
   - component: {fileID: 1136292713}
+  - component: {fileID: 1136292714}
   m_Layer: 0
   m_Name: WarningSign
   m_TagString: TaskMachine
@@ -4089,6 +4120,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1136292714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1136292711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b66605495fe954aa086c6ef036a8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceAmplitude: 0.2
+  bounceSpeed: 3
 --- !u!1 &1175147299
 GameObject:
   m_ObjectHideFlags: 0
@@ -4636,6 +4681,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1253119931}
   - component: {fileID: 1253119932}
+  - component: {fileID: 1253119933}
   m_Layer: 0
   m_Name: WarningSign
   m_TagString: TaskMachine
@@ -4710,6 +4756,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1253119933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253119930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b66605495fe954aa086c6ef036a8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceAmplitude: 0.2
+  bounceSpeed: 3
 --- !u!1 &1256125556
 GameObject:
   m_ObjectHideFlags: 0
@@ -4850,6 +4910,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1308197445}
   - component: {fileID: 1308197446}
+  - component: {fileID: 1308197447}
   m_Layer: 0
   m_Name: WarningSign
   m_TagString: TaskMachine
@@ -4924,6 +4985,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1308197447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308197444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b66605495fe954aa086c6ef036a8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceAmplitude: 0.2
+  bounceSpeed: 3
 --- !u!1 &1317730652
 GameObject:
   m_ObjectHideFlags: 0
@@ -6019,6 +6094,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1801707694}
   - component: {fileID: 1801707695}
+  - component: {fileID: 1801707696}
   m_Layer: 0
   m_Name: WarningSign
   m_TagString: TaskMachine
@@ -6093,6 +6169,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1801707696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1801707693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1b66605495fe954aa086c6ef036a8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceAmplitude: 0.2
+  bounceSpeed: 3
 --- !u!1 &1818215721 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4453845856744993145, guid: c3d7eda71af5d37419ee1ef1e57553d9, type: 3}
@@ -8073,6 +8163,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 49882260}
     m_Modifications:
+    - target: {fileID: 598737456379834602, guid: c3d7eda71af5d37419ee1ef1e57553d9, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 300
+      objectReference: {fileID: 0}
     - target: {fileID: 3163343884697403796, guid: c3d7eda71af5d37419ee1ef1e57553d9, type: 3}
       propertyPath: m_LinearDrag
       value: 10
