@@ -29,17 +29,30 @@ public class ClientManagerUDP : MonoBehaviour
     public Dictionary<GameObject, int> entitiesGO;
     public Dictionary<GameObject, int> mapGO;
 
+    public List<int> votations;
+
     public GameObject loadingObj;
 
     bool socketCreated = false;
 
     public TMP_Text tasksAmount;
+    public TMP_Text eButtonText;
     public TMP_Text ourPlayerName;
+    public TMP_Text discussionText;
     public GameManager gm;
     public GameObject cameraTarget;
 
+    public EmergencyMeeting emergencyMeeting;
+
+    public TMP_Text gameStartsText;
+    public GameObject gameStartUI;
+
     public float updateToServerInSeconds = 0.05f;
     private float timer = 0.0f;
+
+    private float timerStartGame = 0.0f;
+    private readonly float startGameTime = 10.0f;
+    private int connectedUsersForStartGame = 4;
 
     private volatile bool _keepListening = true;
 
@@ -50,6 +63,7 @@ public class ClientManagerUDP : MonoBehaviour
     {
         entitiesGO = new Dictionary<GameObject, int>();
         mapGO = new Dictionary<GameObject, int>();
+        votations = new List<int>();
 
         //we can assume that FIRST element on this dictionary will be player
         foreach (Transform child in entitiesParent.transform)
@@ -91,6 +105,34 @@ public class ClientManagerUDP : MonoBehaviour
             action?.Invoke();
         }
 
+        //start game
+        if (gm.gameState == GameManager.GameState.PRESTART)
+        {
+            if (entitiesGO.Count >= 4)
+            {
+                timerStartGame += Time.deltaTime;
+                gameStartUI.SetActive(true);
+                if (entitiesGO.Count != connectedUsersForStartGame)
+                {
+                    timerStartGame = 0.0f;
+                    connectedUsersForStartGame = entitiesGO.Count;
+                }
+                gameStartsText.SetText($"Game starts in: {(int)(startGameTime - timerStartGame)}s");
+            }
+            if (timerStartGame >= startGameTime)
+            {
+                timerStartGame = 0.0f;
+                connectedUsersForStartGame = 4;
+                gameStartUI.SetActive(false);
+            }
+            if (entitiesGO.Count < 4)
+            {
+                gameStartUI.SetActive(false);
+                timerStartGame = 0.0f;
+            }
+        }
+        //end start game
+
         timer += Time.deltaTime;
 
         if (timer >= updateToServerInSeconds)
@@ -113,14 +155,9 @@ public class ClientManagerUDP : MonoBehaviour
                     ps.impostor,
                     ps.alive
                     );
-
-
-                //temporal break so it only sends player
                 break;
             }
             Send();
-            //Thread send = new Thread(Send);
-            //send.Start();
 
             timer = 0.0f;
         }
@@ -234,7 +271,7 @@ public class ClientManagerUDP : MonoBehaviour
                 idVictim = entry.Value;
                 if (idKiller != 0) break;
             }
-            else if (entry.Key == killer)
+            if (entry.Key == killer)
             {
                 idKiller = entry.Value;
                 if (idVictim != 0) break;
@@ -327,7 +364,10 @@ public class ClientManagerUDP : MonoBehaviour
                                 {
                                     Packet.TextDataPacket dsData = pReader.DeserializeTextDataPacket();
 
-                                    // No function of writing
+                                    EnqueueMainThreadAction(() =>
+                                    {
+                                        HandleTextData(dsData);
+                                    });
                                     break;
                                 }
                             case Packet.Packet.PacketType.ACTION:
@@ -479,15 +519,30 @@ public class ClientManagerUDP : MonoBehaviour
         }
     }
 
+    void HandleTextData(Packet.TextDataPacket dsData)
+    {
+        emergencyMeeting.discussionText.text += $"\n\n{dsData.name}: {dsData.text}";
+    }
+
     void HandlePlayerDelete(Packet.DeleteDataPacket dsData)
     {
+        GameObject keyToRemove = null;
+
         foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
         {
             if (entry.Value == dsData.id)
             {
                 Destroy(entry.Key);
+                gm.totalTasksAmount -= gm.task1AmountPerPlayer;
+                UpdateTasksText();
+                keyToRemove = entry.Key;
                 break;
             }
+        }
+
+        if (keyToRemove != null)
+        {
+            entitiesGO.Remove(keyToRemove);
         }
     }
 
@@ -511,18 +566,19 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandleActionReport(Packet.TriggerReportActionDataPacket dsData)
     {
-        //todo
+        gm.ChangeGameState(GameManager.GameState.DISCUSSION);
     }
 
     void HandleActionVote(Packet.VoteActionDataPacket dsData)
     {
-        //todo
+        votations.Add(dsData.idVoted);
     }
 
     void HandleActionStartGame(Packet.StartGameActionDataPacket dsData)
     {
         bool playerImpostor = true;
         bool ourPlayer = true;
+        eButtonText.SetText("TASK");
         foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
         {
             if (ourPlayer)
@@ -534,6 +590,7 @@ public class ClientManagerUDP : MonoBehaviour
             {
                 if (playerImpostor)
                 {
+                    eButtonText.SetText("KILL");
                     ourPlayerName.color = new Color(1.0f, 0.0f, 0.0f);
                 }
                 entry.Key.GetComponent<PlayerScript>().impostor = true;
@@ -544,6 +601,7 @@ public class ClientManagerUDP : MonoBehaviour
         }
         cameraTarget.transform.position = new Vector3(0, 0, cameraTarget.transform.position.z);
         gm.ChangeGameState(GameManager.GameState.PLAYING);
+        gameStartUI.SetActive(false);
     }
 
     public void UpdateTasksText()
@@ -572,6 +630,61 @@ public class ClientManagerUDP : MonoBehaviour
             pWriter.Serialize(Packet.Packet.PacketType.DELETE, new Packet.DeleteDataPacket(id));
             Send();
             break;
+        }
+    }
+
+    public void SendText(string text)
+    {
+        foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
+        {
+            GameObject obj = entry.Key;
+            int id = entry.Value;
+            pWriter.Serialize(Packet.Packet.PacketType.TEXT, new Packet.TextDataPacket(id, obj.GetComponent<PlayerScript>().userName, text));
+            break;
+        }
+    }
+
+    public void ActionVote(int positionInDictionary)
+    {
+        int currentIndex = 0;
+        int idVoter = 0;
+        bool voter = false;
+        foreach (var entry in entitiesGO)
+        {
+            if (!voter)
+            {
+                idVoter = entry.Value;
+                voter = true;
+            }
+            if (positionInDictionary == 0)
+            {
+                //if 0, we voted on one, so we pass id 0
+                pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, 0));
+                return;
+            }
+            var playerScript = entry.Key.GetComponent<PlayerScript>();
+            if (playerScript != null && playerScript.alive)
+            {
+                if (currentIndex == positionInDictionary)
+                {
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, entry.Value));
+
+                    return;
+                }
+
+                currentIndex++;
+            }
+        }
+    }
+
+    public void ActionReport()
+    {
+        foreach (var entry in entitiesGO)
+        {
+            pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.TriggerReportActionDataPacket(entry.Value));
+            Send();
+            gm.ChangeGameState(GameManager.GameState.DISCUSSION);
+            return;
         }
     }
 

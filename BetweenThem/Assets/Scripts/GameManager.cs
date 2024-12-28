@@ -10,8 +10,26 @@ public class GameManager : MonoBehaviour
     public int totalTasksAmount = 0;
 
     public int totalTasksCounter = 0;
+    public GameObject ourPlayer;
+    public GameObject emergencyMeeting;
+    public GameObject discussingUI;
+    public GameObject votingUI;
+
+    public GameObject postVotingUI;
+
+    public GameObject task1UI;
+    public GameObject exitTask1Button;
+
+    public ClientManagerUDP clientManager;
+
+    private float postVoteTimer = 0.0f;
+    public float postVoteTime = 5.0f;
+
 
     public GameState gameState = GameState.PRESTART;
+
+    private PlayerScript pScript;
+    private PlayerMovement pMovement;
 
     public enum GameState
     {
@@ -28,6 +46,9 @@ public class GameManager : MonoBehaviour
     {
         gameState = GameState.PRESTART;
         totalTasksAmount = task1AmountPerPlayer;
+
+        pScript = ourPlayer.GetComponent<PlayerScript>();
+        pMovement = ourPlayer.GetComponent<PlayerMovement>();
 
         //enable random tasks
         List<GameObject> task1Children = new List<GameObject>();
@@ -56,7 +77,16 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (gameState == GameManager.GameState.POSTVOTE)
+        {
+            postVoteTimer += Time.deltaTime;
 
+            if (postVoteTimer >= postVoteTime)
+            {
+                ChangeGameState(GameManager.GameState.PLAYING);
+                postVoteTimer = 0.0f;
+            }
+        }
     }
 
     public void ChangeGameState(GameState state)
@@ -65,31 +95,62 @@ public class GameManager : MonoBehaviour
         {
             case GameState.PRESTART:
                 {
+                    pMovement.freezeMovement = false;
                     this.gameState = GameState.PRESTART;
                     break;
                 }
             case GameState.PLAYING:
                 {
+                    postVotingUI.SetActive(false);
+                    pMovement.freezeMovement = false;
                     this.gameState = GameState.PLAYING;
                     break;
                 }
             case GameState.DISCUSSION:
                 {
+                    exitTask1Button.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                    pMovement.ClearUI();
+                    emergencyMeeting.SetActive(true);
+                    discussingUI.SetActive(true);
+                    votingUI.SetActive(false);
+                    pMovement.freezeMovement = true;
                     this.gameState = GameState.DISCUSSION;
                     break;
                 }
             case GameState.VOTE:
                 {
+                    pMovement.freezeMovement = true;
+                    discussingUI.SetActive(false);
+                    votingUI.SetActive(true);
                     this.gameState = GameState.VOTE;
                     break;
                 }
             case GameState.POSTVOTE:
                 {
+                    discussingUI.SetActive(true);
+                    votingUI.SetActive(false);
+                    emergencyMeeting.SetActive(false);
+                    postVotingUI.SetActive(true);
+
+                    foreach (KeyValuePair<GameObject, int> entry in clientManager.entitiesGO)
+                    {
+                        if (entry.Key.GetComponent<PlayerScript>().alive)
+                        {
+                            entry.Key.transform.position = new Vector2(0, 0);
+                        }
+                        else
+                        {
+                            entry.Key.tag = "Enemy";
+                        }
+                    }
+
+                    pMovement.freezeMovement = true;
                     this.gameState = GameState.POSTVOTE;
                     break;
                 }
             case GameState.ENDGAME:
                 {
+                    pMovement.freezeMovement = true;
                     this.gameState = GameState.ENDGAME;
                     break;
                 }

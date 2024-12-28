@@ -11,6 +11,7 @@ public class PlayerScript : MonoBehaviour
 
     public string userName = "User";
     public TMP_Text tmp;
+    public TMP_Text eButton;
 
     public bool orientation = true;     //true = right | false = left
     public bool alive = true;
@@ -43,7 +44,9 @@ public class PlayerScript : MonoBehaviour
     {
         if (impostor && killCdTimer > 0.0f)
         {
+            eButton.SetText($"{(int)killCdTimer}");
             killCdTimer -= Time.deltaTime;
+            if (killCdTimer <= 0.0f) eButton.SetText("KILL");
         }
     }
 
@@ -51,6 +54,12 @@ public class PlayerScript : MonoBehaviour
     {
         this.userName = name;
         this.tmp.SetText(name);
+    }
+
+    public void TriggerReport()
+    {
+        if (inRangeReport.Count == 0) return;
+        clientManager.ActionReport();
     }
 
     public void KillEnemy()
@@ -77,6 +86,7 @@ public class PlayerScript : MonoBehaviour
         {
             closestObject.GetComponent<PlayerScript>().GetKilled();
             clientManager.Kill(gameObject, closestObject);
+            inRange.Remove(closestObject);
         }
 
         killCdTimer = killCooldown;

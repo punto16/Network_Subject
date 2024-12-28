@@ -12,8 +12,8 @@ public class PlayerMovement : MonoBehaviour
     float playerSpeed;
     public GameObject task1;
     public GameObject exitButton;
-
-    public bool autoRight = false;
+    public GameObject eButton;
+    public GameObject qButton;
 
     public bool freezeMovement = false;
 
@@ -26,36 +26,33 @@ public class PlayerMovement : MonoBehaviour
         this.playerSpeed = playerScript.playerSpeed;
     }
 
-
     // Update is called once per frame
     void Update()
     {
-
-
         if (this.freezeMovement) return;
 
         Vector2 v = new Vector2(0, 0);
 
         if (Input.GetKey(KeyCode.W))
         {
-            v.y += playerSpeed;
+            v.y += 1;
         }
         if (Input.GetKey(KeyCode.S))
         {
-            v.y -= playerSpeed;
+            v.y -= 1;
         }
         if (Input.GetKey(KeyCode.A))
         {
-            v.x -= playerSpeed;
+            v.x -= 1;
         }
         if (Input.GetKey(KeyCode.D))
         {
-            v.x += playerSpeed;
+            v.x += 1;
         }
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            //START EMERGENCY MEETING/REPORT
+            playerScript.TriggerReport();
         }
 
         if (Input.GetKeyDown(KeyCode.E))
@@ -69,22 +66,26 @@ public class PlayerMovement : MonoBehaviour
             {
                 freezeMovement = true;
                 task1?.SetActive(true);
-                exitButton?.SetActive(false);
+                ClearUI();
             }
         }
 
-
-        //testing
-        if (Input.GetKeyDown(KeyCode.P))
+        if (v.magnitude > 1)
         {
-            autoRight = !autoRight;
+            v = v.normalized * playerSpeed;
         }
-
-        if (autoRight)
+        else
         {
-            v.x += playerSpeed;
+            v *= playerSpeed;
         }
 
         playerPhy.velocity = v;
+    }
+
+    public void ClearUI()
+    {
+        exitButton?.SetActive(false);
+        eButton?.SetActive(false);
+        qButton?.SetActive(false);
     }
 }

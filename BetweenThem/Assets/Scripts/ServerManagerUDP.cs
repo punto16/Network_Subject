@@ -23,7 +23,8 @@ public class ServerManagerUDP : MonoBehaviour
     private IPEndPoint ipep;
     private bool socketCreated = false;
     private float timer = 0.0f;
-    private readonly float startGameTime = 5.0f;
+    private readonly float startGameTime = 10.0f;
+    private int connectedUsersForStartGame = 4;
     private readonly Dictionary<string, UserData> connectedClients = new Dictionary<string, UserData>();
 
     bool preGame = true;
@@ -57,12 +58,22 @@ public class ServerManagerUDP : MonoBehaviour
             if (connectedClients.Count >= 4)
             {
                 timer += Time.deltaTime;
+                if (connectedClients.Count != connectedUsersForStartGame)
+                {
+                    timer = 0.0f;
+                    connectedUsersForStartGame = connectedClients.Count;
+                }
             }
             if (timer >= startGameTime)
             {
                 StartGame();
                 timer = 0.0f;
                 preGame = false;
+                connectedUsersForStartGame = 4;
+            }
+            if (connectedClients.Count < 4)
+            {
+                timer = 0.0f;
             }
         }
     }
