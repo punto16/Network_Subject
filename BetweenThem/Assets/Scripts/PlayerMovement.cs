@@ -29,6 +29,17 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!playerScript.alive)
+        {
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                if (playerScript.inRangeTasks.Count > 0)
+                {
+                    task1?.SetActive(true);
+                    ClearUI();
+                }
+            }
+        }
         if (this.freezeMovement) return;
 
         Vector2 v = new Vector2(0, 0);

@@ -93,6 +93,6 @@ public class Task1 : MonoBehaviour
     public void ExiTask1()
     {
         this.task1?.SetActive(false);
-        this.movementScript.freezeMovement = false;
+        if (playerScript.alive) this.movementScript.freezeMovement = false;
     }
 }

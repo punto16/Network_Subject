@@ -21,6 +21,8 @@ public class PlayerScript : MonoBehaviour
     public float killCooldown = 30.0f;  //kill cooldown
     public float killCdTimer = 0.0f;    //kill timer
     public List<GameObject> inRange;    //store a list of players in range
+
+    public GameObject tasks1Parent;
     public List<GameObject> inRangeTasks;
     public List<GameObject> inRangeReport;
 
@@ -87,6 +89,13 @@ public class PlayerScript : MonoBehaviour
             closestObject.GetComponent<PlayerScript>().GetKilled();
             clientManager.Kill(gameObject, closestObject);
             inRange.Remove(closestObject);
+            int aliveCrewmates = 0;
+            foreach (KeyValuePair<GameObject, int> entry in clientManager.entitiesGO)
+            {
+                PlayerScript pScript = entry.Key.GetComponent<PlayerScript>();
+                if (pScript.alive && !pScript.impostor) aliveCrewmates++;
+            }
+            if (aliveCrewmates <= 1) clientManager.gm.gameObject.GetComponent<SceneManag>().ChangeScene("ImpostorWin");
         }
 
         killCdTimer = killCooldown;
@@ -98,6 +107,15 @@ public class PlayerScript : MonoBehaviour
         playerGO.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
         playerGO.tag = "EmergencyButton";
         alive = false;
+
+        foreach (Transform i in tasks1Parent.transform)
+        {
+            GameObject obj = i.gameObject;
+            if (obj.GetComponent<Task1Info>().GetEnabledTask())
+            {
+                inRangeTasks.Add(obj);
+            }
+        }
 
         if (playerMovement != null)
         {

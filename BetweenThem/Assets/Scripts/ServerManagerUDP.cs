@@ -4,7 +4,6 @@ using UnityEngine;
 using System.Threading;
 using System.Collections.Generic;
 using System;
-using TMPro;
 
 public class UserData
 {
@@ -28,16 +27,14 @@ public class ServerManagerUDP : MonoBehaviour
     private int connectedUsersForStartGame = 4;
     private readonly Dictionary<string, UserData> connectedClients = new Dictionary<string, UserData>();
 
-    public TMP_Text ipText;
-
     bool preGame = true;
 
     public int serverPort = 9050;
 
     void Start()
     {
+        timer = 0.0f;
         StartServer();
-        ipText.text += GetIP();
     }
 
     public void StartServer()
@@ -285,31 +282,5 @@ public class ServerManagerUDP : MonoBehaviour
         int randomIndex = random.Next(0, clients.Count);
 
         return clients[randomIndex].data.id;
-    }
-
-    public string GetIP()
-    {
-        string localIP = "Not available";
-        try
-        {
-            string hostName = Dns.GetHostName();
-
-            IPAddress[] addresses = Dns.GetHostAddresses(hostName);
-
-            foreach (IPAddress address in addresses)
-            {
-                if (address.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    localIP = address.ToString();
-                    break;
-                }
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"ERROR GETTING IP: {ex.Message}");
-        }
-
-        return localIP;
     }
 }
