@@ -88,4 +88,11 @@ public class PlayerMovement : MonoBehaviour
         eButton?.SetActive(false);
         qButton?.SetActive(false);
     }
+
+    public void ActiveUI()
+    {
+        exitButton?.SetActive(true);
+        eButton?.SetActive(true);
+        qButton?.SetActive(true);
+    }
 }

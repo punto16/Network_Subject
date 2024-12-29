@@ -102,6 +102,7 @@ public class GameManager : MonoBehaviour
             case GameState.PLAYING:
                 {
                     postVotingUI.SetActive(false);
+                    pMovement.ActiveUI();
                     pMovement.freezeMovement = false;
                     this.gameState = GameState.PLAYING;
                     break;
@@ -136,7 +137,7 @@ public class GameManager : MonoBehaviour
                     {
                         if (entry.Key.GetComponent<PlayerScript>().alive)
                         {
-                            entry.Key.transform.position = new Vector2(0, 0);
+                            entry.Key.transform.position = new Vector3(0, 0, entry.Key.transform.position.z);
                         }
                         else
                         {

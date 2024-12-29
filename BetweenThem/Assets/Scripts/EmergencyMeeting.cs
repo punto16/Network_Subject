@@ -13,6 +13,8 @@ public class EmergencyMeeting : MonoBehaviour
     public TMP_InputField inputField;
     public TMP_Dropdown dropdown;
 
+    public GameObject buttonVote;
+
     public PlayerScript pScript;
     public ClientManagerUDP clientManager;
     public GameManager gm;
@@ -27,9 +29,17 @@ public class EmergencyMeeting : MonoBehaviour
     void Start()
     {
         PopulateDropdownOptions();
+        buttonVote.SetActive(pScript.alive);
         discussionText.SetText("Discussion time...");
         titleText.SetText($"Discussion Time: {(int)(discussionTime - discussionTimer)}s");
-        inputField.characterLimit = 32;
+        inputField.characterLimit = 64;
+    }
+
+    private void OnEnable()
+    {
+        PopulateDropdownOptions();
+        buttonVote.SetActive(pScript.alive);
+        discussionText.SetText("Discussion time...");
     }
 
     // Update is called once per frame
@@ -65,15 +75,11 @@ public class EmergencyMeeting : MonoBehaviour
 
     public void KickVoted()
     {
-        var voteCounts = new Dictionary<int, int>();
-        foreach (int vote in clientManager.votations) voteCounts[vote] = voteCounts.ContainsKey(vote) ? voteCounts[vote] + 1 : 1;
-        int maxCount = voteCounts.Values.Max();
-        int mostVotedId = voteCounts.Where(x => x.Value == maxCount).Select(x => x.Key).Count() > 1 ? 0 : voteCounts.First(x => x.Value == maxCount).Key;
-
-        GameObject matchingObject = clientManager.entitiesGO.FirstOrDefault(entry => entry.Value == mostVotedId).Key;
+        int resolvedVoteId = DetermineVoteResult(clientManager.votations);
+        GameObject matchingObject = clientManager.entitiesGO.FirstOrDefault(entry => entry.Value == resolvedVoteId).Key;
         if (matchingObject != null)
         {
-            if (mostVotedId == 0)
+            if (resolvedVoteId == 0)
             {
                 postVotingText.SetText("NO ONE has been executed");
             }
@@ -81,11 +87,36 @@ public class EmergencyMeeting : MonoBehaviour
             {
                 PlayerScript ps = matchingObject.GetComponent<PlayerScript>();
                 postVotingText.SetText($"{ps.userName} has been executed");
-                matchingObject.transform.position = new Vector2(0, 0);
+                matchingObject.transform.position = new Vector3(0, 0, matchingObject.transform.position.z);
                 ps.GetKilled();
+
+                if (ps.impostor) //if we kicked in votes the impostor, crewmates win
+                {
+                    gm.gameObject.GetComponent<SceneManag>().ChangeScene("CrewmateWin");
+                }
+                int aliveCrewmates = 0;
+                foreach (KeyValuePair<GameObject, int> entry in clientManager.entitiesGO)
+                {
+                    PlayerScript pScript = entry.Key.GetComponent<PlayerScript>();
+                    if (pScript.alive && !pScript.impostor) aliveCrewmates++;
+                }
+                if (aliveCrewmates <= 1) gm.gameObject.GetComponent<SceneManag>().ChangeScene("ImpostorWin");
             }
             gm.ChangeGameState(GameManager.GameState.POSTVOTE);
         }
+        clientManager.votations.Clear();
+    }
+
+    public int DetermineVoteResult(List<int> votations)
+    {
+        var voteCounts = new Dictionary<int, int>();
+        foreach (int vote in votations)
+        {
+            voteCounts[vote] = voteCounts.ContainsKey(vote) ? voteCounts[vote] + 1 : 1;
+        }
+        int maxCount = voteCounts.Values.Max();
+        var mostVotedIds = voteCounts.Where(x => x.Value == maxCount).Select(x => x.Key).ToList();
+        return mostVotedIds.Count > 1 ? 0 : mostVotedIds[0];
     }
 
     public void DiscussionInput(string text)

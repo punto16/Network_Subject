@@ -81,7 +81,8 @@ public class Task1 : MonoBehaviour
             playerScript.completedTasks++;
             gameManager.totalTasksCounter++;
             clientManager.UpdateTasksText();
-            clientManager.CompleteTask(gameObject, playerScript.completedTasks);
+            clientManager.CompleteTask(playerScript.gameObject, playerScript.completedTasks);
+            if (gameManager.totalTasksCounter >= gameManager.totalTasksAmount) gameManager.gameObject.GetComponent<SceneManag>().ChangeScene("CrewmateWin");
         }
         else
         {

@@ -17,4 +17,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ServerScene.unity
     guid: fd69a44f2113d984caffad1e1058fbbe
+  - enabled: 1
+    path: Assets/Scenes/ImpostorWin.unity
+    guid: 46e7e19e8a2a06b42b79f14e72b1fc0a
+  - enabled: 1
+    path: Assets/Scenes/CrewmateWin.unity
+    guid: 1d2efd9a1836376458f4b96ed42850a2
   m_configObjects: {}

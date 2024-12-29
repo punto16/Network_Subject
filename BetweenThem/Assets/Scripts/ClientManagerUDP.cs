@@ -548,20 +548,24 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandleActionKill(Packet.KillActionDataPacket dsData)
     {
+        int aliveCrewmates = 0;
         foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
         {
+            PlayerScript pScript = entry.Key.GetComponent<PlayerScript>();
             if (entry.Value == dsData.idVictim)
             {
-                entry.Key.GetComponent<PlayerScript>().GetKilled();
-                break;
+                pScript.GetKilled();
             }
+            if (pScript.alive && !pScript.impostor) aliveCrewmates++;
         }
+        if (aliveCrewmates <= 1) gm.gameObject.GetComponent<SceneManag>().ChangeScene("ImpostorWin");
     }
 
     void HandleActionCompleteTask(Packet.CompleteTaskActionDataPacket dsData)
     {
         gm.totalTasksCounter++;
         UpdateTasksText();
+        if (gm.totalTasksCounter >= gm.totalTasksAmount) gm.gameObject.GetComponent<SceneManag>().ChangeScene("CrewmateWin");
     }
 
     void HandleActionReport(Packet.TriggerReportActionDataPacket dsData)
@@ -660,6 +664,7 @@ public class ClientManagerUDP : MonoBehaviour
             {
                 //if 0, we voted on one, so we pass id 0
                 pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, 0));
+                votations.Add(0);
                 return;
             }
             var playerScript = entry.Key.GetComponent<PlayerScript>();
@@ -668,7 +673,7 @@ public class ClientManagerUDP : MonoBehaviour
                 if (currentIndex == positionInDictionary)
                 {
                     pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, entry.Value));
-
+                    votations.Add(entry.Value);
                     return;
                 }
 

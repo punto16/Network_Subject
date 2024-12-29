@@ -179,12 +179,12 @@ MonoBehaviour:
   postVotingText: {fileID: 447315972}
   inputField: {fileID: 526158503}
   dropdown: {fileID: 544350193}
+  buttonVote: {fileID: 1418086330}
   pScript: {fileID: 1818215727}
   clientManager: {fileID: 1910955654}
   gm: {fileID: 1041636711}
   discussionTime: 70
   votingTime: 40
-  postVoteTime: 5
 --- !u!1 &45668810
 GameObject:
   m_ObjectHideFlags: 0
@@ -2877,7 +2877,7 @@ MonoBehaviour:
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
+  m_ScrollSensitivity: 15
   m_Viewport: {fileID: 1625335410}
   m_HorizontalScrollbar: {fileID: 1008220570}
   m_VerticalScrollbar: {fileID: 1405848818}
@@ -5972,6 +5972,7 @@ MonoBehaviour:
   task1UI: {fileID: 1870816183}
   exitTask1Button: {fileID: 211845326}
   clientManager: {fileID: 1910955654}
+  postVoteTime: 5
   gameState: 0
 --- !u!1 &1059545520
 GameObject:
