@@ -65,16 +65,16 @@ public class EmergencyMeeting : MonoBehaviour
 
             if (votingTimer >= votingTime)
             {
-                titleText.SetText("Voting Time Finished");
-                gm.ChangeGameState(GameManager.GameState.POSTVOTE);
                 KickVoted();
-                votingTimer = 0.0f;
             }
         }
     }
 
     public void KickVoted()
     {
+        titleText.SetText("Voting Time Finished");
+        gm.ChangeGameState(GameManager.GameState.POSTVOTE);
+        votingTimer = 0.0f;
         int resolvedVoteId = DetermineVoteResult(clientManager.votations);
         GameObject matchingObject = clientManager.entitiesGO.FirstOrDefault(entry => entry.Value == resolvedVoteId).Key;
         if (matchingObject != null)
@@ -102,13 +102,17 @@ public class EmergencyMeeting : MonoBehaviour
                 }
                 if (aliveCrewmates <= 1) gm.gameObject.GetComponent<SceneManag>().ChangeScene("ImpostorWin");
             }
-            gm.ChangeGameState(GameManager.GameState.POSTVOTE);
         }
         clientManager.votations.Clear();
     }
 
-    public int DetermineVoteResult(List<int> votations)
+    public int DetermineVoteResult(List<Packet.VoteActionDataPacket> votationsDs)
     {
+        List<int> votations = new List<int>();
+        foreach (var i in votationsDs)
+        {
+            votations.Add(i.idVoted);
+        }
         var voteCounts = new Dictionary<int, int>();
         foreach (int vote in votations)
         {

@@ -28,8 +28,7 @@ public class ClientManagerUDP : MonoBehaviour
 
     public Dictionary<GameObject, int> entitiesGO;
     public Dictionary<GameObject, int> mapGO;
-
-    public List<int> votations;
+    public List<Packet.VoteActionDataPacket> votations;          //int voted, int voter
 
     public GameObject loadingObj;
 
@@ -63,7 +62,7 @@ public class ClientManagerUDP : MonoBehaviour
     {
         entitiesGO = new Dictionary<GameObject, int>();
         mapGO = new Dictionary<GameObject, int>();
-        votations = new List<int>();
+        votations = new List<Packet.VoteActionDataPacket>();
 
         //we can assume that FIRST element on this dictionary will be player
         foreach (Transform child in entitiesParent.transform)
@@ -575,7 +574,15 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandleActionVote(Packet.VoteActionDataPacket dsData)
     {
-        votations.Add(dsData.idVoted);
+        int idVoted, idVoter;
+        foreach (var i in votations)
+        {
+            idVoted = i.idVoted;
+            idVoter = i.idVoter;
+            if (idVoter == dsData.idVoter) return;
+        }
+        votations.Add(dsData);
+        if (votations.Count == gm.alivePlayers) emergencyMeeting.KickVoted();
     }
 
     void HandleActionStartGame(Packet.StartGameActionDataPacket dsData)
@@ -664,7 +671,8 @@ public class ClientManagerUDP : MonoBehaviour
             {
                 //if 0, we voted on one, so we pass id 0
                 pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, 0));
-                votations.Add(0);
+                votations.Add(new Packet.VoteActionDataPacket(idVoter, 0));
+                if (votations.Count == gm.alivePlayers) emergencyMeeting.KickVoted();
                 return;
             }
             var playerScript = entry.Key.GetComponent<PlayerScript>();
@@ -673,7 +681,8 @@ public class ClientManagerUDP : MonoBehaviour
                 if (currentIndex == positionInDictionary)
                 {
                     pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, entry.Value));
-                    votations.Add(entry.Value);
+                    votations.Add(new Packet.VoteActionDataPacket(idVoter, entry.Value));
+                    if (votations.Count == gm.alivePlayers) emergencyMeeting.KickVoted();
                     return;
                 }
 

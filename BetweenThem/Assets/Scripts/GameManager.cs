@@ -5,6 +5,8 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public GameObject task1Parent;
+    public int alivePlayers;
+
     public int task1AmountPerPlayer = 5;
 
     public int totalTasksAmount = 0;
@@ -44,6 +46,7 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        alivePlayers = 1;
         gameState = GameState.PRESTART;
         totalTasksAmount = task1AmountPerPlayer;
 
@@ -101,6 +104,7 @@ public class GameManager : MonoBehaviour
                 }
             case GameState.PLAYING:
                 {
+                    alivePlayers = clientManager.entitiesGO.Count;
                     postVotingUI.SetActive(false);
                     pMovement.ActiveUI();
                     pMovement.freezeMovement = false;

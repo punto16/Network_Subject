@@ -107,6 +107,7 @@ public class PlayerScript : MonoBehaviour
         playerGO.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
         playerGO.tag = "EmergencyButton";
         alive = false;
+        clientManager.gm.alivePlayers--;
 
         foreach (Transform i in tasks1Parent.transform)
         {
