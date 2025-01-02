@@ -46,6 +46,11 @@ public class ServerManagerUDP : MonoBehaviour
 
     void Start()
     {
+        connectedClients.Clear();
+        discussionTimer = 0.0f;
+        votingTimer = 0.0f;
+        postVotingTimer = 0.0f;
+        gameState = GameManager.GameState.PRESTART;
         votations = new List<Packet.VoteActionDataPacket>();
         timer = 0.0f;
         StartServer();
