@@ -70,6 +70,16 @@ public class ServerManagerUDP : MonoBehaviour
         receiveThread.Start();
     }
 
+    public void StopServer()
+    {
+        if (socket != null)
+        {
+            socket.Close();
+            socket.Dispose();
+            socket = null;
+        }
+    }
+
     void Update()
     {
         alivePlayers = 0;
