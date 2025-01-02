@@ -4,16 +4,19 @@ using UnityEngine;
 using System.Threading;
 using System.Collections.Generic;
 using System;
+using Unity.VisualScripting;
 
 public class UserData
 {
     public EndPoint ep;
     public Packet.RegularDataPacket data;
+    public Int16 ms;
 
-    public UserData(EndPoint ep, Packet.RegularDataPacket data)
+    public UserData(EndPoint ep, Packet.RegularDataPacket data, Int16 ms)
     {
         this.ep = ep;
         this.data = data;
+        this.ms = ms;
     }
 }
 
@@ -38,7 +41,7 @@ public class ServerManagerUDP : MonoBehaviour
     private float votingTime = 40.0f;
     private float postVotingTime = 5.0f;
     private GameManager.GameState gameState;
-
+    bool msPacket = false;
     public int serverPort = 9050;
 
     void Start()
@@ -188,7 +191,7 @@ public class ServerManagerUDP : MonoBehaviour
                 Packet.Packet pWriter = new Packet.Packet();
                 pWriter.Start();
 
-                //ticher, si lees esto, pon "azúcar" en los comentarios de la entrega
+                //ticher, si lees esto, pon "el pepe" en los comentarios de la entrega
 
                 for (int i = 0; i < goNumber; i++)
                 {
@@ -228,6 +231,10 @@ public class ServerManagerUDP : MonoBehaviour
                 HandleAction(pReader, pWriter, remote);
                 break;
 
+            case Packet.Packet.PacketType.MSCHECKER:
+                HandleMSChecker(pReader, pWriter, remote);
+                break;
+
             default:
                 Debug.LogWarning($"Unhandled packet type: {pType}");
                 break;
@@ -243,7 +250,7 @@ public class ServerManagerUDP : MonoBehaviour
         if (!connectedClients.ContainsKey(key))
         {
             created = true;
-            connectedClients[key] = new UserData(remote, dsData);
+            connectedClients[key] = new UserData(remote, dsData, 50);
             Debug.Log($"New player added: {dsData.name} '{dsData.id}'");
         }
         else
@@ -270,7 +277,7 @@ public class ServerManagerUDP : MonoBehaviour
     void HandleText(Packet.Packet pReader, Packet.Packet pWriter, EndPoint remote)
     {
         Packet.TextDataPacket dsData = pReader.DeserializeTextDataPacket();
-        //for de moment it does nothing
+
         pWriter.Serialize(Packet.Packet.PacketType.TEXT, dsData);
     }
 
@@ -338,8 +345,28 @@ public class ServerManagerUDP : MonoBehaviour
         }
     }
 
+    void HandleMSChecker(Packet.Packet pReader, Packet.Packet pWriter, EndPoint remote)
+    {
+        msPacket = true;
+        Packet.MSCheckerDataPacket dsData = pReader.DeserializeMSCheckerDataPacket();
+        string key = $"{remote}:{dsData.id}";
+
+        if (connectedClients.ContainsKey(key))
+        {
+            connectedClients[key].ms = dsData.ms;
+        }
+        pWriter.Serialize(Packet.Packet.PacketType.MSCHECKER, dsData);
+    }
+
     void Broadcast(Packet.Packet pWriter, EndPoint remote, bool toEveryone = false)
     {
+        if (msPacket)
+        {
+            Send(remote, pWriter);
+            pWriter.Close();
+            msPacket = false;
+            return;
+        }
         foreach (var client in connectedClients.Values)
         {
             if (toEveryone || !client.ep.Equals(remote))

@@ -119,6 +119,18 @@ namespace Packet
         }   
     }
 
+    public class MSCheckerDataPacket
+    {
+        public int id;
+        public Int16 ms;
+        
+        public MSCheckerDataPacket(int id, Int16 ms)
+        {
+            this.id = id;
+            this.ms = ms;
+        }
+    }
+
     public class Packet
     {
         public enum PacketType : Int16
@@ -148,6 +160,11 @@ namespace Packet
             //string userName
             //string text
             ACTION,
+            //int16 packet type
+            //actiontype data
+            MSCHECKER,
+            //int16 packet type
+            //int16 ms
         }
 
         public enum ActionType : Int16
@@ -325,6 +342,14 @@ namespace Packet
             return new ChangeStateDataPacket(gameManager);
         }
 
+        public MSCheckerDataPacket DeserializeMSCheckerDataPacket()
+        {
+            int id = reader.ReadInt32();
+            Int16 ms = reader.ReadInt16();
+
+            return new MSCheckerDataPacket(id, ms);
+        }
+
         //serializing
         public void Serialize(PacketType type, RegularDataPacket data)
         {
@@ -461,6 +486,18 @@ namespace Packet
             writer.Write((Int16)data.gameState);
 
             this.goNumber++;
+        }
+
+        public void Serialize(PacketType type, MSCheckerDataPacket data)
+        {
+            if (ms.Position == 0)
+            {
+                // Reserve 2 bytes for the goNumber (Int16)
+                writer.Write((Int16)goNumber);
+            }
+            writer.Write((Int16)type);
+            writer.Write(data.id);
+            writer.Write((Int16)data.ms);
         }
 
         //send

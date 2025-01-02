@@ -21,7 +21,7 @@ public class ClientManagerUDP : MonoBehaviour
 
     public string userName = "User";        //username of player
 
-    public int ms = 50;
+    public Int16 ms = 50;
 
     public GameObject entitiesParent;
     public GameObject mapParent;
@@ -40,6 +40,7 @@ public class ClientManagerUDP : MonoBehaviour
     public TMP_Text eButtonText;
     public TMP_Text ourPlayerName;
     public TMP_Text discussionText;
+    public TMP_Text msText;
     public GameManager gm;
     public GameObject cameraTarget;
 
@@ -54,6 +55,11 @@ public class ClientManagerUDP : MonoBehaviour
     private float timerStartGame = 0.0f;
     private readonly float startGameTime = 10.0f;
     private int connectedUsersForStartGame = 4;
+
+    private float timeMSSend = 1.0f; //send ms packets to server every 1 second
+    private float timerMSSend = 0.0f;
+    private float msCalculator = 0.0f;
+    bool calculatingMS = false;
 
     private volatile bool _keepListening = true;
 
@@ -133,6 +139,25 @@ public class ClientManagerUDP : MonoBehaviour
             }
         }
         //end start game
+
+        timerMSSend += Time.deltaTime;
+        
+        if (timerMSSend >= timeMSSend)
+        {
+            foreach (var entry in entitiesGO)
+            {
+                int id = entry.Value;
+                Send();
+                pWriter.Serialize(Packet.Packet.PacketType.MSCHECKER, new Packet.MSCheckerDataPacket(id, ms));
+                calculatingMS = true;
+                Send();
+
+                timerMSSend = 0.0f;
+                break;
+            }
+        }
+
+        if (calculatingMS) msCalculator += Time.deltaTime;
 
         timer += Time.deltaTime;
 
@@ -464,6 +489,16 @@ public class ClientManagerUDP : MonoBehaviour
                                     }
                                     break;
                                 }
+                            case Packet.Packet.PacketType.MSCHECKER:
+                                {
+                                    Packet.MSCheckerDataPacket dsData = pReader.DeserializeMSCheckerDataPacket();
+
+                                    EnqueueMainThreadAction(() =>
+                                    {
+                                        HandleMSChecker(dsData);
+                                    });
+                                    break;
+                                }
                             default:
                                 break;
                         }
@@ -503,7 +538,6 @@ public class ClientManagerUDP : MonoBehaviour
     {
         _keepListening = false;
 
-        // Close the socket if needed
         if (socket != null)
         {
             socket.Close();
@@ -672,6 +706,14 @@ public class ClientManagerUDP : MonoBehaviour
                 gm.ChangeGameState(dsData.gameState);
             }
         }
+    }
+
+    void HandleMSChecker(Packet.MSCheckerDataPacket dsData)
+    {
+        calculatingMS = false;
+        ms = (Int16)(msCalculator * 1000);
+        msCalculator = 0.0f;
+        msText.SetText($"{ms} ms");
     }
 
     public void UpdateTasksText()
