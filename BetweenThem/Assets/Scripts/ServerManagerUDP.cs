@@ -232,6 +232,7 @@ public class ServerManagerUDP : MonoBehaviour
                 break;
 
             case Packet.Packet.PacketType.MSCHECKER:
+                Debug.Log("Server Handling MSChecker");
                 HandleMSChecker(pReader, pWriter, remote);
                 break;
 
@@ -247,6 +248,7 @@ public class ServerManagerUDP : MonoBehaviour
         Packet.RegularDataPacket dsData = pReader.DeserializeRegularDataPacket();
         string key = $"{remote}:{dsData.id}";
 
+
         if (!connectedClients.ContainsKey(key))
         {
             created = true;
@@ -255,11 +257,17 @@ public class ServerManagerUDP : MonoBehaviour
         }
         else
         {
+            dsData.pos = PredictPositionWithMS(dsData.pos, dsData.vel, connectedClients[key].ms);
             connectedClients[key].data = dsData;
             created = false;
         }
 
         pWriter.Serialize(created ? Packet.Packet.PacketType.CREATE : Packet.Packet.PacketType.UPDATE, dsData);
+    }
+
+    public static System.Numerics.Vector2 PredictPositionWithMS(System.Numerics.Vector2 pos, System.Numerics.Vector2 vel, Int16 ms)
+    {
+        return (pos + vel * (float)(ms / 2.0f / 1000.0f));
     }
 
     void HandleDelete(Packet.Packet pReader, Packet.Packet pWriter, EndPoint remote)

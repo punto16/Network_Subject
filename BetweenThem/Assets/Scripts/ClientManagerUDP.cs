@@ -147,7 +147,7 @@ public class ClientManagerUDP : MonoBehaviour
             foreach (var entry in entitiesGO)
             {
                 int id = entry.Value;
-                Send();
+                if (pWriter.GetGameObjectsAmount() != 0) Send();
                 pWriter.Serialize(Packet.Packet.PacketType.MSCHECKER, new Packet.MSCheckerDataPacket(id, ms));
                 calculatingMS = true;
                 Send();
@@ -546,6 +546,8 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandlePlayerData(Packet.RegularDataPacket dsData)
     {
+        dsData.pos = ServerManagerUDP.PredictPositionWithMS(dsData.pos, dsData.vel, this.ms);
+
         bool create = true;
         foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
         {

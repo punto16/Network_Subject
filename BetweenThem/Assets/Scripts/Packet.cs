@@ -498,6 +498,8 @@ namespace Packet
             writer.Write((Int16)type);
             writer.Write(data.id);
             writer.Write((Int16)data.ms);
+
+            this.goNumber++;
         }
 
         //send
