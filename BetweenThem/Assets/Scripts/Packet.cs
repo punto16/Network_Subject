@@ -109,6 +109,16 @@ namespace Packet
         }
     }
 
+    public class ChangeStateDataPacket
+    {
+        public GameManager.GameState gameState;
+
+        public ChangeStateDataPacket(GameManager.GameState gameState)
+        {
+            this.gameState = gameState;
+        }   
+    }
+
     public class Packet
     {
         public enum PacketType : Int16
@@ -160,6 +170,9 @@ namespace Packet
             STARTGAME,
             //int16 packet type
             //int id impostor
+            GAMESTATE,
+            //int16 packet type
+            //GameState new game state
         }
 
         private MemoryStream ms;
@@ -305,6 +318,13 @@ namespace Packet
             return new StartGameActionDataPacket(idImpostor);
         }
 
+        public ChangeStateDataPacket DeserializeChangeStateDataPacket()
+        {
+            GameManager.GameState gameManager = (GameManager.GameState)reader.ReadInt16();
+
+            return new ChangeStateDataPacket(gameManager);
+        }
+
         //serializing
         public void Serialize(PacketType type, RegularDataPacket data)
         {
@@ -425,6 +445,20 @@ namespace Packet
             writer.Write((Int16)type);
             writer.Write((Int16)ActionType.STARTGAME);
             writer.Write(data.idImpostor);
+
+            this.goNumber++;
+        }
+
+        public void Serialize(PacketType type, ChangeStateDataPacket data)
+        {
+            if (ms.Position == 0)
+            {
+                // Reserve 2 bytes for the goNumber (Int16)
+                writer.Write((Int16)goNumber);
+            }
+            writer.Write((Int16)type);
+            writer.Write((Int16)ActionType.GAMESTATE);
+            writer.Write((Int16)data.gameState);
 
             this.goNumber++;
         }

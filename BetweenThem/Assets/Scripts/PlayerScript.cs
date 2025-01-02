@@ -62,6 +62,7 @@ public class PlayerScript : MonoBehaviour
     {
         if (inRangeReport.Count == 0) return;
         clientManager.ActionReport();
+        inRangeReport.Clear();
     }
 
     public void KillEnemy()
@@ -86,6 +87,7 @@ public class PlayerScript : MonoBehaviour
         }
         if (closestObject != null)
         {
+            if (!closestObject.GetComponent<PlayerScript>().alive) return;
             closestObject.GetComponent<PlayerScript>().GetKilled();
             clientManager.Kill(gameObject, closestObject);
             inRange.Remove(closestObject);

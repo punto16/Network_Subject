@@ -33,10 +33,14 @@ public class EmergencyMeeting : MonoBehaviour
         discussionText.SetText("Discussion time...");
         titleText.SetText($"Discussion Time: {(int)(discussionTime - discussionTimer)}s");
         inputField.characterLimit = 64;
+        discussionTimer = 0.0f;
+        votingTimer = 0.0f;
     }
 
     private void OnEnable()
     {
+        discussionTimer = 0.0f;
+        votingTimer = 0.0f;
         PopulateDropdownOptions();
         buttonVote.SetActive(pScript.alive);
         discussionText.SetText("Discussion time...");

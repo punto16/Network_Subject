@@ -21,6 +21,8 @@ public class ClientManagerUDP : MonoBehaviour
 
     public string userName = "User";        //username of player
 
+    public int ms = 50;
+
     public GameObject entitiesParent;
     public GameObject mapParent;
 
@@ -28,7 +30,7 @@ public class ClientManagerUDP : MonoBehaviour
 
     public Dictionary<GameObject, int> entitiesGO;
     public Dictionary<GameObject, int> mapGO;
-    public List<Packet.VoteActionDataPacket> votations;          //int voted, int voter
+    public List<Packet.VoteActionDataPacket> votations;
 
     public GameObject loadingObj;
 
@@ -276,29 +278,51 @@ public class ClientManagerUDP : MonoBehaviour
                 if (idVictim != 0) break;
             }
         }
-        Serialize(Packet.Packet.PacketType.ACTION, Packet.Packet.ActionType.KILL, idKiller, idVictim);
+        for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+        {
+            Serialize(Packet.Packet.PacketType.ACTION, Packet.Packet.ActionType.KILL, idKiller, idVictim);
+            Send();
+        }
     }
 
     public void CompleteTask(GameObject go, int playerTasksAmount)
     {
         foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
         {
-            GameObject obj = entry.Key;
             if (entry.Key == go)
             {
-                Serialize(Packet.Packet.PacketType.ACTION, Packet.Packet.ActionType.COMPLETETASK, entry.Value, playerTasksAmount);
+                for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+                {
+                    Serialize(Packet.Packet.PacketType.ACTION, Packet.Packet.ActionType.COMPLETETASK, entry.Value, playerTasksAmount);
+                    Send();
+                }
                 break;
             }
         }
     }
-    
+
     public void TriggerReport(GameObject go)
     {
         foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
         {
-            GameObject obj = entry.Key;
             if (entry.Key == go)
-                Serialize(Packet.Packet.PacketType.ACTION, Packet.Packet.ActionType.TRIGGERREPORT, entry.Value);
+            {
+                for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+                {
+                    Serialize(Packet.Packet.PacketType.ACTION, Packet.Packet.ActionType.TRIGGERREPORT, entry.Value);
+                    Send();
+                }
+                break;
+            }
+        }
+    }
+
+    public void ChangeServerGameState(GameManager.GameState gameState)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.ChangeStateDataPacket(gameState));
+            Send();
         }
     }
 
@@ -422,6 +446,16 @@ public class ClientManagerUDP : MonoBehaviour
                                                 EnqueueMainThreadAction(() =>
                                                 {
                                                     HandleActionStartGame(dsData);
+                                                });
+                                                break;
+                                            }
+                                        case Packet.Packet.ActionType.GAMESTATE:
+                                            {
+                                                Packet.ChangeStateDataPacket dsData = pReader.DeserializeChangeStateDataPacket();
+
+                                                EnqueueMainThreadAction(() =>
+                                                {
+                                                    HandleActionChangeState(dsData);
                                                 });
                                                 break;
                                             }
@@ -553,6 +587,7 @@ public class ClientManagerUDP : MonoBehaviour
             PlayerScript pScript = entry.Key.GetComponent<PlayerScript>();
             if (entry.Value == dsData.idVictim)
             {
+                if (!pScript.alive) return;
                 pScript.GetKilled();
             }
             if (pScript.alive && !pScript.impostor) aliveCrewmates++;
@@ -562,6 +597,14 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandleActionCompleteTask(Packet.CompleteTaskActionDataPacket dsData)
     {
+        foreach (var entry in entitiesGO)
+        {
+            if (entry.Value == dsData.id)
+            {
+                if (entry.Key.GetComponent<PlayerScript>().completedTasks == dsData.playerCompletedTasks) return;
+                else entry.Key.GetComponent<PlayerScript>().completedTasks = dsData.playerCompletedTasks;
+            }
+        }
         gm.totalTasksCounter++;
         UpdateTasksText();
         if (gm.totalTasksCounter >= gm.totalTasksAmount) gm.gameObject.GetComponent<SceneManag>().ChangeScene("CrewmateWin");
@@ -569,7 +612,7 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandleActionReport(Packet.TriggerReportActionDataPacket dsData)
     {
-        gm.ChangeGameState(GameManager.GameState.DISCUSSION);
+        if (gm.gameState != GameManager.GameState.DISCUSSION) gm.ChangeGameState(GameManager.GameState.DISCUSSION);
     }
 
     void HandleActionVote(Packet.VoteActionDataPacket dsData)
@@ -587,6 +630,7 @@ public class ClientManagerUDP : MonoBehaviour
 
     void HandleActionStartGame(Packet.StartGameActionDataPacket dsData)
     {
+        if (gm.gameState != GameManager.GameState.PRESTART) return;
         bool playerImpostor = true;
         bool ourPlayer = true;
         eButtonText.SetText("TASK");
@@ -615,6 +659,21 @@ public class ClientManagerUDP : MonoBehaviour
         gameStartUI.SetActive(false);
     }
 
+    void HandleActionChangeState(Packet.ChangeStateDataPacket dsData)
+    {
+        if (gm.gameState != dsData.gameState)
+        {
+            if (dsData.gameState == GameManager.GameState.POSTVOTE)
+            {
+                emergencyMeeting.KickVoted();
+            }
+            else
+            {
+                gm.ChangeGameState(dsData.gameState);
+            }
+        }
+    }
+
     public void UpdateTasksText()
     {
         if (this.tasksAmount == null) return;
@@ -636,10 +695,12 @@ public class ClientManagerUDP : MonoBehaviour
     {
         foreach (KeyValuePair<GameObject, int> entry in entitiesGO)
         {
-            GameObject obj = entry.Key;
             int id = entry.Value;
-            pWriter.Serialize(Packet.Packet.PacketType.DELETE, new Packet.DeleteDataPacket(id));
-            Send();
+            for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+            {
+                pWriter.Serialize(Packet.Packet.PacketType.DELETE, new Packet.DeleteDataPacket(id));
+                Send();
+            }
             break;
         }
     }
@@ -669,8 +730,12 @@ public class ClientManagerUDP : MonoBehaviour
             }
             if (positionInDictionary == 0)
             {
-                //if 0, we voted on one, so we pass id 0
-                pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, 0));
+                for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+                {
+                    //if 0, we voted on one, so we pass id 0
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, 0));
+                    Send();
+                }
                 votations.Add(new Packet.VoteActionDataPacket(idVoter, 0));
                 if (votations.Count == gm.alivePlayers) emergencyMeeting.KickVoted();
                 return;
@@ -680,7 +745,11 @@ public class ClientManagerUDP : MonoBehaviour
             {
                 if (currentIndex == positionInDictionary)
                 {
-                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, entry.Value));
+                    for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+                    {
+                        pWriter.Serialize(Packet.Packet.PacketType.ACTION, new Packet.VoteActionDataPacket(idVoter, entry.Value));
+                        Send();
+                    }
                     votations.Add(new Packet.VoteActionDataPacket(idVoter, entry.Value));
                     if (votations.Count == gm.alivePlayers) emergencyMeeting.KickVoted();
                     return;

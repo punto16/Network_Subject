@@ -27,12 +27,23 @@ public class ServerManagerUDP : MonoBehaviour
     private int connectedUsersForStartGame = 4;
     private readonly Dictionary<string, UserData> connectedClients = new Dictionary<string, UserData>();
 
-    bool preGame = true;
+    public List<Packet.VoteActionDataPacket> votations;
+    int alivePlayers = 0;
+
+    private float discussionTimer = 0.0f;
+    private float votingTimer = 0.0f;
+    private float postVotingTimer = 0.0f;
+
+    private float discussionTime = 70.0f;
+    private float votingTime = 40.0f;
+    private float postVotingTime = 5.0f;
+    private GameManager.GameState gameState;
 
     public int serverPort = 9050;
 
     void Start()
     {
+        votations = new List<Packet.VoteActionDataPacket>();
         timer = 0.0f;
         StartServer();
     }
@@ -53,8 +64,13 @@ public class ServerManagerUDP : MonoBehaviour
 
     void Update()
     {
+        alivePlayers = 0;
+        foreach (var i in connectedClients)
+        {
+            if (i.Value.data.alive) alivePlayers++;
+        }
         //min of 4 players to play the game
-        if (preGame)
+        if (gameState == GameManager.GameState.PRESTART)
         {
             if (connectedClients.Count >= 4)
             {
@@ -69,12 +85,42 @@ public class ServerManagerUDP : MonoBehaviour
             {
                 StartGame();
                 timer = 0.0f;
-                preGame = false;
+                gameState = GameManager.GameState.PLAYING;
                 connectedUsersForStartGame = 4;
             }
             if (connectedClients.Count < 4)
             {
                 timer = 0.0f;
+            }
+        }
+        else if (gameState == GameManager.GameState.DISCUSSION)
+        {
+            discussionTimer += Time.deltaTime;
+            if (discussionTimer >= discussionTime)
+            {
+                gameState = GameManager.GameState.VOTE;
+                ChangeClientsGameState(gameState);
+                discussionTimer = 0.0f;
+            }
+        }
+        else if (gameState == GameManager.GameState.VOTE)
+        {
+            votingTimer += Time.deltaTime;
+            if (votingTimer >= votingTime)
+            {
+                gameState = GameManager.GameState.POSTVOTE;
+                ChangeClientsGameState(gameState);
+                votingTimer = 0.0f;
+            }
+        }
+        else if (gameState == GameManager.GameState.POSTVOTE)
+        {
+            postVotingTimer += Time.deltaTime;
+            if (postVotingTimer >= postVotingTime)
+            {
+                gameState = GameManager.GameState.PLAYING;
+                ChangeClientsGameState(gameState);
+                postVotingTimer = 0.0f;
             }
         }
     }
@@ -102,7 +148,24 @@ public class ServerManagerUDP : MonoBehaviour
 
         foreach (var client in connectedClients.Values)
         {
-            Send(client.ep, pWriter);
+            for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+                Send(client.ep, pWriter);
+        }
+        pWriter.Close();
+    }
+
+    void ChangeClientsGameState(GameManager.GameState gameState)
+    {
+        Packet.Packet pWriter = new Packet.Packet();
+        pWriter.Start();
+
+        Packet.ChangeStateDataPacket dsData = new Packet.ChangeStateDataPacket(gameState);
+        pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+
+        foreach (var client in connectedClients.Values)
+        {
+            for (int i = 0; i < 3; i++) //critical packets are sent 3 times in case any of them is lost
+                Send(client.ep, pWriter);
         }
         pWriter.Close();
     }
@@ -220,7 +283,6 @@ public class ServerManagerUDP : MonoBehaviour
             case Packet.Packet.ActionType.KILL:
                 {
                     Packet.KillActionDataPacket dsData = pReader.DeserializeKillActionDataPacket();
-
                     pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
                     break;
                 }
@@ -234,21 +296,40 @@ public class ServerManagerUDP : MonoBehaviour
             case Packet.Packet.ActionType.TRIGGERREPORT:
                 {
                     Packet.TriggerReportActionDataPacket dsData = pReader.DeserializeReportActionDataPacket();
-
+                    this.gameState = GameManager.GameState.DISCUSSION;
                     pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
                     break;
                 }
             case Packet.Packet.ActionType.VOTE:
                 {
                     Packet.VoteActionDataPacket dsData = pReader.DeserializeVoteActionDataPacket();
-
+                    int idVoted, idVoter;
+                    foreach (var i in votations)
+                    {
+                        idVoted = i.idVoted;
+                        idVoter = i.idVoter;
+                        if (idVoter == dsData.idVoter) return;
+                    }
+                    votations.Add(dsData);
+                    if (votations.Count == alivePlayers)
+                    {
+                        ChangeClientsGameState(GameManager.GameState.POSTVOTE);
+                        votations.Clear();
+                    }
                     pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
                     break;
                 }
             case Packet.Packet.ActionType.STARTGAME:
                 {
                     Packet.StartGameActionDataPacket dsData = pReader.DeserializeStartGameActionDataPacket();
-
+                    this.gameState = GameManager.GameState.PLAYING;
+                    pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
+                    break;
+                }
+            case Packet.Packet.ActionType.GAMESTATE:
+                {
+                    Packet.ChangeStateDataPacket dsData = pReader.DeserializeChangeStateDataPacket();
+                    this.gameState = dsData.gameState;
                     pWriter.Serialize(Packet.Packet.PacketType.ACTION, dsData);
                     break;
                 }

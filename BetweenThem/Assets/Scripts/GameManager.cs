@@ -104,7 +104,13 @@ public class GameManager : MonoBehaviour
                 }
             case GameState.PLAYING:
                 {
-                    alivePlayers = clientManager.entitiesGO.Count;
+                    int c = 0;
+                    foreach (var entry in clientManager.entitiesGO)
+                    {
+                        PlayerScript ps = entry.Key.GetComponent<PlayerScript>();
+                        if (ps.alive) c++;
+                    }
+                    alivePlayers = c;
                     postVotingUI.SetActive(false);
                     pMovement.ActiveUI();
                     pMovement.freezeMovement = false;
